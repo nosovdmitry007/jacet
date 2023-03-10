@@ -3,10 +3,17 @@ import os
 import platform
 import cv2
 import cv2_ext
+<<<<<<< HEAD
 # import imageio
 import imutils
 import numpy as np
 # import rawpy
+=======
+import imageio
+import imutils
+import numpy as np
+import rawpy
+>>>>>>> c4d82ba (1)
 import torch
 import pandas as pd
 from datetime import timedelta
@@ -31,7 +38,11 @@ class Jacket:
         results = self.model_detect(image)
         df = results.pandas().xyxy[0]
         # df = df.drop(np.where(df['confidence'] < 0.1)[0])
+<<<<<<< HEAD
         # print(df)
+=======
+        print(df)
+>>>>>>> c4d82ba (1)
         # ob = pd.DataFrame()
         # ob['class'] = df['name']
         # oblasty = ob.values.tolist()

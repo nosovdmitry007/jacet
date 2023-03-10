@@ -3,6 +3,7 @@ from person import Jacket
 
 jac = Jacket()
 
+<<<<<<< HEAD
 test = jac.person_filter('2023-03-07_21-23-19.JPG')
 pprint.pprint(test)
 # tes1t = jac.person_filter_video('test.mp4')
@@ -11,3 +12,13 @@ pprint.pprint(test)
 
 
 # pprint.pprint(tes1t)
+=======
+# test = jac.person_filter('2023-03-07_21-23-19.JPG')
+# pprint.pprint(test)
+tes1t = jac.person_filter_video('test.mp4')
+# test.mp4
+# tes1t = jac.cadre('test.mp4')
+
+
+pprint.pprint(tes1t)
+>>>>>>> c4d82ba (1)
