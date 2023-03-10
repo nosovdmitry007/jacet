@@ -1,55 +1,82 @@
-import glob
+
 import os
-import platform
 import cv2
 import cv2_ext
-<<<<<<< HEAD
-# import imageio
+
 import imutils
 import numpy as np
-# import rawpy
-=======
-import imageio
-import imutils
-import numpy as np
-import rawpy
->>>>>>> c4d82ba (1)
 import torch
 import pandas as pd
 from datetime import timedelta
 
-class Jacket:
+class People:
     def __init__(self):
-        self.model_detect = torch.hub.load('./yolov5_master', 'custom',
+        self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
                                   path='./model/yolov5m6.pt',
                                   source='local')
 
-    def person_filter(self, put,video=0):
+    def person_filter(self,put, cad='1', filter='person', video=0):
         if video == 0:
             image = cv2_ext.imread(put)
         else:
             image = put
-
         if image.shape[0] < image.shape[1]:
             image = imutils.resize(image, height=1280)
         else:
             image = imutils.resize(image, width=1280)
-
-        results = self.model_detect(image)
+        results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
-        # df = df.drop(np.where(df['confidence'] < 0.1)[0])
-<<<<<<< HEAD
-        # print(df)
-=======
-        print(df)
->>>>>>> c4d82ba (1)
-        # ob = pd.DataFrame()
-        # ob['class'] = df['name']
-        # oblasty = ob.values.tolist()
-        # oblasty = sum(oblasty, [])
+        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        df = df.drop(np.where(df['name'] != filter)[0])
+        if video == 1:
+            df['time_cadr'] = cad
         return df
-        # if cat in oblasty:
-        #     os.replace(put + sleh + i, put + sleh + cat + sleh + i)
+
+class Jalet:
+    def __init__(self):
+        self.model_detect_jalet = torch.hub.load('./yolov5_master', 'custom',
+                                                  path='./model/jalet.pt',
+                                                  source='local')
+
+    def jalet_filter(self, put, cad='1', video=0):
+        if video == 0:
+            image = cv2_ext.imread(put)
+        else:
+            image = put
+        if image.shape[0] < image.shape[1]:
+            image = imutils.resize(image, height=1280)
+        else:
+            image = imutils.resize(image, width=1280)
+        results = self.model_detect_jalet(image)
+        df = results.pandas().xyxy[0]
+        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        if video == 1:
+            df['time_cadr'] = cad
+        return df
+
+class Chasha:
+    def __init__(self):
+        self.model_detect_chasha = torch.hub.load('./yolov5_master', 'custom',
+                                                  path='./model/chasha.pt',
+                                                  source='local')
+
+    def chasha_filter(self, put, cad='1', video=0):
+        if video == 0:
+            image = cv2_ext.imread(put)
+        else:
+            image = put
+        if image.shape[0] < image.shape[1]:
+            image = imutils.resize(image, height=1280)
+        else:
+            image = imutils.resize(image, width=1280)
+        results = self.model_detect_chasha(image)
+        df = results.pandas().xyxy[0]
+        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        if video == 1:
+            df['time_cadr'] = cad
+        return df
+
+class Kadr:
 
     def format_timedelta(self,td):
         """Служебная функция для классного форматирования объектов timedelta (например, 00:00:20.05)
@@ -108,8 +135,9 @@ class Jacket:
                 # если ближайшая длительность меньше или равна длительности кадра,
                 # затем сохраняем фрейм
                 frame_duration_formatted = self.format_timedelta(timedelta(seconds=frame_duration))
-
-                cadre.append(frame)
+                cad = [frame, frame_duration_formatted]
+                cadre.append(cad)
+                # print(cadre)
                 # cv2.imwrite(os.path.join(filename, f"frame{frame_duration_formatted}.jpg"), frame)
                 # удалить точку продолжительности из списка, так как эта точка длительности уже сохранена
                 try:
@@ -121,11 +149,7 @@ class Jacket:
         return cadre
 
 
-    def person_filter_video(self, put):
-        z = self.cadre(put)
-        print(z)
-        for i in z:
-            print(self.person_filter(i,1))
+
 
 
 

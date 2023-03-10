@@ -1,24 +1,41 @@
-import pprint
-from person import Jacket
 
-jac = Jacket()
+import pandas as pd
+from tqdm import tqdm
+from person import People, Kadr, Jalet, Chasha
 
-<<<<<<< HEAD
-test = jac.person_filter('2023-03-07_21-23-19.JPG')
-pprint.pprint(test)
-# tes1t = jac.person_filter_video('test.mp4')
-# # test.mp4
-# tes1t = jac.cadre('test.mp4')
+people = People()
+jalet = Jalet()
+chasha = Chasha()
+kad = Kadr()
 
+test = people.person_filter('2023-03-07_21-23-19.JPG')
+print(test)
 
-# pprint.pprint(tes1t)
-=======
-# test = jac.person_filter('2023-03-07_21-23-19.JPG')
-# pprint.pprint(test)
-tes1t = jac.person_filter_video('test.mp4')
-# test.mp4
-# tes1t = jac.cadre('test.mp4')
+def person_filter_video(put):
+    z = kad.cadre(put)
+    df = pd.DataFrame()
+    for i in tqdm(z, ncols=100):
+        str = people.person_filter(i[0],i[1],'person',1)
+        df = pd.concat([df, str])
 
+    return df
 
-pprint.pprint(tes1t)
->>>>>>> c4d82ba (1)
+def jalet_filter_video(put):
+    z = kad.cadre(put)
+    df = pd.DataFrame()
+    for i in tqdm(z, ncols=100):
+        str = jalet.jalet_filter(i[0],i[1],1)
+        df = pd.concat([df, str])
+
+    return df
+
+def chasha_filter_video(put):
+    z = kad.cadre(put)
+    df = pd.DataFrame()
+    for i in tqdm(z, ncols=100):
+        str = chasha.chasha_filter(i[0],i[1],1)
+        df = pd.concat([df, str])
+
+    return df
+
+print(jalet_filter_video('test_chasha.mp4'))
