@@ -224,3 +224,39 @@ i[1] - метка времени
 0   bowl  0:00:30.00  
 0   bowl  0-00-30.13 
 ```
+
+# Сохранение кадров и боксов
+
+Для сохранения кадров и координат боксов в цикл вставляем код
+
+```
+        if len(str.name.unique()) != 0:
+            sav(i[0], i[1], str,'test')
+```
+Пример:
+```
+def person_filter_video(put):
+    z = kad.cadre(put)
+    df = pd.DataFrame()
+    for i in tqdm(z, ncols=100):
+        str = people.person_filter(i[0],i[1],'person',1)
+        df = pd.concat([df, str])
+        if len(str.name.unique()) != 0:
+            sav(i[0], i[1], str,'test')
+    return df
+```
+i[0] - кадр 
+
+i[1] - метка времени
+
+str - датафрейм с координатами найденных классов
+
+'test' - папка куда сохраняются кадрв и *.txt файлы с координатами
+
+Структура каталога:
+
+![img.png](img.png)
+
+images - каталог с изображениями
+txt - каталог с координатами в пиксельном формате
+txt_yolo - аталог с координатами в формате YOLO

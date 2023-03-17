@@ -2,13 +2,13 @@
 import os
 import cv2
 import cv2_ext
-
+import pybboxes as pbx
 import imutils
 import numpy as np
 import torch
 import pandas as pd
 from datetime import timedelta
-
+import os
 class People:
     def __init__(self):
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
@@ -150,6 +150,47 @@ class Kadr:
 
 
 
+def convert(clas,size, box):
+    dw = 1./size[0]
+    dh = 1./size[1]
+    x = (box[0] + box[1])/2.0
+    y = (box[2] + box[3])/2.0
+    w = box[1] - box[0]
+    h = box[3] - box[2]
+    x = x*dw
+    w = w*dw
+    y = y*dh
+    h = h*dh
+    return [clas,x,y,w,h]
+
+
+def sav(kadr, name,fil,put):
+    if not os.path.exists(put):
+        os.makedirs(put)
+        os.makedirs(f"{put}/images")
+        os.makedirs(f"{put}/txt")
+        os.makedirs(f"{put}/txt_yolo")
+    if not os.path.exists(f"{put}/images"):
+        os.makedirs(f"{put}/images")
+    if not os.path.exists(f"{put}/txt"):
+        os.makedirs(f"{put}/txt")
+    if not os.path.exists(f"{put}/txt_yolo"):
+        os.makedirs(f"{put}/txt_yolo")
+
+    colum = ['class', 'xmin', 'ymin', 'xmax', 'ymax']
+    cv2.imwrite(f"{put}/images/frame_{name}.jpg", kadr)
+
+    fil.to_csv(f"{put}/txt/frame_{name}.txt", columns=colum,header = False, sep='\t', index=False)
+    yolo = []
+
+    for row in fil.values.tolist():
+        W, H = kadr.shape[1], kadr.shape[0]
+        y = list(pbx.convert_bbox((row[0], row[1], row[2], row[3]), from_type="voc", to_type="yolo", image_size=(W, H)))
+        y.insert(0,row[5])
+        yolo.append(y)
+
+    dy = pd.DataFrame(yolo, columns = colum)
+    dy.to_csv(f"{put}/txt_yolo/frame_yolo_{name}.txt", columns=colum,header = False, sep='\t', index=False)
 
 
 
