@@ -260,3 +260,59 @@ str - датафрейм с координатами найденных клас
 images - каталог с изображениями
 txt - каталог с координатами в пиксельном формате
 txt_yolo - аталог с координатами в формате YOLO
+
+
+# Переобучение модели
+1. Выгрузить размечанный датасет в анотации Yolo из Label Studio
+2. Разбить датасет на тренировочную и тестовую выборки (config_dataset)
+заархивировать папку dataset
+3. Если появились новые классы или классы изменились необходимо поменять YAML файл
+```
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# COCO128 dataset https://www.kaggle.com/ultralytics/coco128 (first 128 images from COCO train2017) by Ultralytics
+# Example usage: python train.py --data coco128.yaml
+# parent
+# ├── yolov5
+# └── datasets
+#     └── coco128  ← downloads here (7 MB)
+
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: ../dataset  # dataset root dir
+train: images/train  # train images (relative to 'path') 128 images
+val: images/valid  # val images (relative to 'path') 128 images
+test:  # test images (optional)
+
+# Classes
+names:
+  0: bowl
+
+
+# Download script/URL (optional)
+#download: https://ultralytics.com/assets/coco128.zip
+
+```
+4. Положить файлы на Google Disk
+5. открыть Google Colab
+6. Выполнить код:
+```
+#Установка yolo и необходимых библиотек
+!git clone https://github.com/ultralytics/yolov5.git
+%cd yolov5/
+!pip install --upgrade pip
+!pip install -r requirements.txt
+```
+```
+from google.colab import drive
+drive.mount('/content/drive')
+```
+```
+#Копирование данных
+!cp /content/drive/MyDrive/Stroi/chasha.yaml /content/yolov5/data/chasha.yaml
+!unzip /content/drive/MyDrive/Stroi/dataset_chasha.zip -d /content #разархивация датасета, должны появится папка dataset
+```
+```
+#Обучение модели
+!python train.py --batch -1 --imgsz 1280 --epochs 500 --data chasha.yaml --weights yolov5m6.pt --project /content/drive/MyDrive/Stroi/yolov5_chasha_best --hyp hyp.Objects365.yaml --cache 'ram'
+```
+
