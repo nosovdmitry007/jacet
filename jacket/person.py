@@ -12,7 +12,7 @@ import os
 class People:
     def __init__(self):
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                  path='./model/yolov5m6.pt',
+                                  path='./model/person.pt',
                                   source='local')
 
     def person_filter(self,put, cad='1', filter='person', video=0):
@@ -31,6 +31,30 @@ class People:
         if video == 1:
             df['time_cadr'] = cad
         return df
+
+
+class Truck:
+    def __init__(self):
+        self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
+                                  path='./model/truck.pt',
+                                  source='local')
+
+    def truck_filter(self, put, cad='1', video=0):
+        if video == 0:
+            image = cv2_ext.imread(put)
+        else:
+            image = put
+        if image.shape[0] < image.shape[1]:
+            image = imutils.resize(image, height=1280)
+        else:
+            image = imutils.resize(image, width=1280)
+        results = self.model_detect_people(image)
+        df = results.pandas().xyxy[0]
+        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        if video == 1:
+            df['time_cadr'] = cad
+        return df
+
 
 class Jalet:
     def __init__(self):
@@ -180,7 +204,7 @@ def sav(kadr, name,fil,put):
     colum = ['class', 'xmin', 'ymin', 'xmax', 'ymax']
     cv2.imwrite(f"{put}/images/frame_{name}.jpg", kadr)
 
-    fil.to_csv(f"{put}/txt/frame_{name}.txt", columns=colum,header = False, sep='\t', index=False)
+    fil.to_csv(f"{put}/txt/frame_{name}.txt", columns=colum, header=False, sep='\t', index=False)
     yolo = []
 
     for row in fil.values.tolist():
@@ -189,8 +213,8 @@ def sav(kadr, name,fil,put):
         y.insert(0,row[5])
         yolo.append(y)
 
-    dy = pd.DataFrame(yolo, columns = colum)
-    dy.to_csv(f"{put}/txt_yolo/frame_yolo_{name}.txt", columns=colum,header = False, sep='\t', index=False)
+    dy = pd.DataFrame(yolo, columns=colum)
+    dy.to_csv(f"{put}/txt_yolo/frame_yolo_{name}.txt", columns=colum, header=False, sep='\t', index=False)
 
 
 

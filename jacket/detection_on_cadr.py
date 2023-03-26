@@ -3,12 +3,13 @@ from tqdm import tqdm
 import cv2
 import pandas as pd
 import os
-from person import People,  sav, Jalet, Chasha
+from person import People,  sav, Jalet, Chasha, Truck
 import numpy as np
 
 people = People()
 jalet = Jalet()
 chasha = Chasha()
+truck = Truck()
 
 def format_timedelta( td):
     """Служебная функция для классного форматирования объектов timedelta (например, 00:00:20.05)
@@ -77,6 +78,8 @@ def detection_on_cadr(video_file,cat):
                 str = people.person_filter(frame, frame_duration_formatted, 'person', 1)
             if cat == 'chasha':
                 str = chasha.chasha_filter(frame, frame_duration_formatted, 1)
+            if cat == 'truck':
+                str = truck.truck_filter(frame, frame_duration_formatted, 1)
             df = pd.concat([df, str])
             if len(str.name.unique()) != 0:
                 sav(frame, frame_duration_formatted, str, 'test')
@@ -90,4 +93,4 @@ def detection_on_cadr(video_file,cat):
     return df
 
 
-print(detection_on_cadr('test_1.mp4','person'))
+print(detection_on_cadr('test_truck.mp4', 'truck'))
