@@ -27,7 +27,7 @@ class People:
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
         df = df.drop(np.where(df['confidence'] < 0.1)[0])
-        df = df.drop(np.where(df['name'] != filter)[0])
+        # df = df.drop(np.where(df['name'] != filter)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -50,6 +50,7 @@ class Truck:
             image = imutils.resize(image, width=1280)
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
+        print(df)
         df = df.drop(np.where(df['confidence'] < 0.1)[0])
         if video == 1:
             df['time_cadr'] = cad
@@ -174,18 +175,18 @@ class Kadr:
 
 
 
-def convert(clas,size, box):
-    dw = 1./size[0]
-    dh = 1./size[1]
-    x = (box[0] + box[1])/2.0
-    y = (box[2] + box[3])/2.0
-    w = box[1] - box[0]
-    h = box[3] - box[2]
-    x = x*dw
-    w = w*dw
-    y = y*dh
-    h = h*dh
-    return [clas,x,y,w,h]
+# def convert(clas,size, box):
+#     dw = 1./size[0]
+#     dh = 1./size[1]
+#     x = (box[0] + box[1])/2.0
+#     y = (box[2] + box[3])/2.0
+#     w = box[1] - box[0]
+#     h = box[3] - box[2]
+#     x = x*dw
+#     w = w*dw
+#     y = y*dh
+#     h = h*dh
+#     return [clas,x,y,w,h]
 
 
 def sav(kadr, name,fil,put):
@@ -202,6 +203,14 @@ def sav(kadr, name,fil,put):
         os.makedirs(f"{put}/txt_yolo")
 
     colum = ['class', 'xmin', 'ymin', 'xmax', 'ymax']
+    if kadr.shape[0] < kadr.shape[1]:
+        kadr = imutils.resize(kadr, height=1280)
+    else:
+        kadr = imutils.resize(kadr, width=1280)
+
+    for k in fil.values.tolist():
+        cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 2)
+
     cv2.imwrite(f"{put}/images/frame_{name}.jpg", kadr)
 
     fil.to_csv(f"{put}/txt/frame_{name}.txt", columns=colum, header=False, sep='\t', index=False)

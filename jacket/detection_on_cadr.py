@@ -82,7 +82,7 @@ def detection_on_cadr(video_file,cat):
                 str = truck.truck_filter(frame, frame_duration_formatted, 1)
             df = pd.concat([df, str])
             if len(str.name.unique()) != 0:
-                sav(frame, frame_duration_formatted, str, 'test')
+                sav(frame, frame_duration_formatted, str, 'test_truck')
 # удалить точку продолжительности из списка, так как эта точка длительности уже сохранена
             try:
                 saving_frames_durations.pop(0)
@@ -93,4 +93,4 @@ def detection_on_cadr(video_file,cat):
     return df
 
 
-print(detection_on_cadr('test_truck.mp4', 'truck'))
+print(detection_on_cadr('test_1.mp4', 'person'))

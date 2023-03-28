@@ -41,4 +41,4 @@ def config_dataset_yolo5(put_in,img,labl,tr,put_out):
         os.replace(put_txt + sleh + txt, val_txt + sleh + txt)
 
 
-config_dataset_yolo5('./Concrete_mixer_truck/person','images','labels',80,'./Concrete_mixer_truck/person/train')
+config_dataset_yolo5('./person/dat/dataset','images','labels',80,'./person/dat/dataset/train')
