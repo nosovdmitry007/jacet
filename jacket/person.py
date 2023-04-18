@@ -12,21 +12,27 @@ import os
 class People:
     def __init__(self):
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                  path='./model/person.pt',
+                                  path='./model/yolov5m6.pt',
                                   source='local')
 
-    def person_filter(self,put, cad='1', video=0):
+    def kadr(self, img):
+        if img.shape[0] < img.shape[1]:
+            image = imutils.resize(img, height=1280)
+        else:
+            image = imutils.resize(img, width=1280)
+        return image
+
+    def person_filter(self, put, cad='1', video=0):
         if video == 0:
             image = cv2_ext.imread(put)
         else:
             image = put
-        if image.shape[0] < image.shape[1]:
-            image = imutils.resize(image, height=1280)
-        else:
-            image = imutils.resize(image, width=1280)
+
+        image = self.kadr(image)
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
+        df = df.drop(np.where(df['name'] != 'person')[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -43,14 +49,11 @@ class Truck:
             image = cv2_ext.imread(put)
         else:
             image = put
-        if image.shape[0] < image.shape[1]:
-            image = imutils.resize(image, height=1280)
-        else:
-            image = imutils.resize(image, width=1280)
+        image = self.kadr(image)
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
         print(df)
-        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -67,13 +70,10 @@ class Jalet:
             image = cv2_ext.imread(put)
         else:
             image = put
-        if image.shape[0] < image.shape[1]:
-            image = imutils.resize(image, height=1280)
-        else:
-            image = imutils.resize(image, width=1280)
+        image = self.kadr(image)
         results = self.model_detect_jalet(image)
         df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -89,10 +89,7 @@ class Chasha:
             image = cv2_ext.imread(put)
         else:
             image = put
-        if image.shape[0] < image.shape[1]:
-            image = imutils.resize(image, height=1280)
-        else:
-            image = imutils.resize(image, width=1280)
+        image = self.kadr(image)
         results = self.model_detect_chasha(image)
         df = results.pandas().xyxy[0]
         df = df.drop(np.where(df['confidence'] < 0.1)[0])
@@ -174,10 +171,11 @@ class Kadr:
         return cadre
 
 
-def sav(kadr, name, fil, put, ramka, probability):
+def sav(kadr, name, fil, put, ramka, probability,save_frame):
     if not os.path.exists(put):
         os.makedirs(put)
         os.makedirs(f"{put}/images")
+        os.makedirs(f"{put}/save_frame")
         os.makedirs(f"{put}/txt")
         os.makedirs(f"{put}/txt_yolo")
     if not os.path.exists(f"{put}/images"):
@@ -186,19 +184,27 @@ def sav(kadr, name, fil, put, ramka, probability):
         os.makedirs(f"{put}/txt")
     if not os.path.exists(f"{put}/txt_yolo"):
         os.makedirs(f"{put}/txt_yolo")
+    if not os.path.exists(f"{put}/save_frame"):
+        os.makedirs(f"{put}/save_frame")
 
     colum = ['class', 'xmin', 'ymin', 'xmax', 'ymax']
     if kadr.shape[0] < kadr.shape[1]:
         kadr = imutils.resize(kadr, height=1280)
     else:
         kadr = imutils.resize(kadr, width=1280)
+    if save_frame == 1:
+        sd = 0
+        for k in fil.values.tolist():
+            crop_img = kadr[int(k[1]):int(k[3]),int(k[0]):int(k[2])]
+            cv2.imwrite(f"{put}/save_frame/frame8_{name}_{sd}.jpg", crop_img)
+            sd += 1
+
     if ramka == 1:
         for k in fil.values.tolist():
             cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 2)
             if probability == 1:
                 cv2.putText(kadr, str(round(k[4],2)), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
                             fontScale=0.8, color=(0, 255, 0), thickness=2)
-
     cv2.imwrite(f"{put}/images/frame_{name}.jpg", kadr)
 
     fil.to_csv(f"{put}/txt/frame_{name}.txt", columns=colum, header=False, sep='\t', index=False)
