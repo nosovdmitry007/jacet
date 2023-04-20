@@ -7,6 +7,7 @@ import torch
 import pandas as pd
 from datetime import timedelta
 import os
+from tensorflow.keras.models import load_model
 
 
 class People:
@@ -14,7 +15,7 @@ class People:
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
                                   path='./model/yolov5m6.pt',
                                   source='local')
-
+        self.model_class = load_model('./model/classification.h5', compile=False)
     def kadr(self, img):
         if img.shape[0] < img.shape[1]:
             image = imutils.resize(img, height=1280)
@@ -22,7 +23,7 @@ class People:
             image = imutils.resize(img, width=1280)
         return image
 
-    def person_filter(self, put, cad='1', video=0):
+    def person_filter(self, put, cad='1', video=0, classificator=0):
         if video == 0:
             image = cv2_ext.imread(put)
         else:
@@ -35,6 +36,24 @@ class People:
         df = df.drop(np.where(df['name'] != 'person')[0])
         if video == 1:
             df['time_cadr'] = cad
+        if classificator == 1:
+            className = ['JacketAndHat', 'Hat', 'None', 'Jacket']
+            visota = 50
+            shirina = 50
+            clas = []
+            for k in df.values.tolist():
+                # print(k)
+                kad = image[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
+                kad = cv2.cvtColor(cv2.resize(kad, (shirina,visota)),cv2.COLOR_BGR2RGB)
+                kad = kad / 255
+                sp = []
+                sp.append(kad)
+                sp = np.array(sp)
+                prediction = self.model_class.predict(sp)
+                # print(className[np.argmax(prediction)])
+                clas.append(className[np.argmax(prediction)])
+            df['class_people'] = clas
+            # print(df)
         return df
 
 
@@ -59,25 +78,6 @@ class Truck:
         return df
 
 
-class Jalet:
-    def __init__(self):
-        self.model_detect_jalet = torch.hub.load('./yolov5_master', 'custom',
-                                                  path='./model/jalet.pt',
-                                                  source='local')
-
-    def jalet_filter(self, put, cad='1', video=0):
-        if video == 0:
-            image = cv2_ext.imread(put)
-        else:
-            image = put
-        image = self.kadr(image)
-        results = self.model_detect_jalet(image)
-        df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.3)[0])
-        if video == 1:
-            df['time_cadr'] = cad
-        return df
-
 class Chasha:
     def __init__(self):
         self.model_detect_chasha = torch.hub.load('./yolov5_master', 'custom',
@@ -99,7 +99,6 @@ class Chasha:
 
 
 class Kadr:
-
     def format_timedelta(self,td):
         """Служебная функция для классного форматирования объектов timedelta (например, 00:00:20.05)
         исключая микросекунды и сохраняя миллисекунды"""
@@ -171,7 +170,7 @@ class Kadr:
         return cadre
 
 
-def sav(kadr, name, fil, put, ramka, probability,save_frame):
+def sav(kadr, name, fil, put, ramka, probability,save_frame,clas = 0):
     if not os.path.exists(put):
         os.makedirs(put)
         os.makedirs(f"{put}/images")
@@ -192,6 +191,7 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame):
         kadr = imutils.resize(kadr, height=1280)
     else:
         kadr = imutils.resize(kadr, width=1280)
+
     if save_frame == 1:
         sd = 0
         for k in fil.values.tolist():
@@ -201,10 +201,30 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame):
 
     if ramka == 1:
         for k in fil.values.tolist():
-            cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 2)
-            if probability == 1:
-                cv2.putText(kadr, str(round(k[4],2)), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
-                            fontScale=0.8, color=(0, 255, 0), thickness=2)
+            if k[6] != 'person' or clas == 0:
+                cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 2)
+                if probability == 1:
+                    cv2.putText(kadr, str(round(k[4],2)), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                                fontScale=0.8, color=(0, 255, 0), thickness=2)
+            if k[6] == 'person' and clas == 1:
+                if k[8] == 'None':
+                    cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 2)
+                    if probability == 1:
+                        cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                                    fontScale=0.8, color=(0, 255, 0), thickness=2)
+
+                if k[8] == 'JacketAndHat':
+                    cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 255, 0), 2)
+                    if probability == 1:
+                        cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                                    fontScale=0.8, color=(0, 255, 0), thickness=2)
+                if k[8] == 'Hat' or k[8] == 'Jacket':
+                    cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (255, 0, 0), 2)
+                    if probability == 1:
+                        cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                                    fontScale=0.8, color=(0, 255, 0), thickness=2)
+
+
     cv2.imwrite(f"{put}/images/frame_{name}.jpg", kadr)
 
     fil.to_csv(f"{put}/txt/frame_{name}.txt", columns=colum, header=False, sep='\t', index=False)

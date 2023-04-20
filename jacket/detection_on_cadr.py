@@ -1,13 +1,11 @@
 from datetime import timedelta
-from tqdm import tqdm
 import cv2
 import pandas as pd
 import os
-from person import People,  sav, Jalet, Chasha, Truck
+from person import People,  sav,  Chasha, Truck
 import numpy as np
 
 people = People()
-jalet = Jalet()
 chasha = Chasha()
 truck = Truck()
 
@@ -35,7 +33,7 @@ def get_saving_frames_durations( cap, saving_fps):
     return s
 
 
-def detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_frame):
+def detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_frame,clas = 0):
     SAVING_FRAMES_PER_SECOND = 10
     filename, _ = os.path.splitext(video_file)
     filename += "-opencv"
@@ -52,7 +50,6 @@ def detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_fram
     saving_frames_durations = get_saving_frames_durations(cap, saving_frames_per_second)
     # запускаем цикл
     count = 0
-    cadre = []
     df = pd.DataFrame()
     while True:
         is_read, frame = cap.read()
@@ -72,17 +69,15 @@ def detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_fram
             # затем сохраняем фрейм
             frame_duration_formatted = format_timedelta(timedelta(seconds=frame_duration))
         #Выбираем модель которую вызываем
-            if cat == 'jalet':
-                str = jalet.jalet_filter(frame, frame_duration_formatted, 1)
             if cat == 'person':
-                str = people.person_filter(frame, frame_duration_formatted, 1)
+                str = people.person_filter(frame, frame_duration_formatted, 1, clas)
             if cat == 'chasha':
                 str = chasha.chasha_filter(frame, frame_duration_formatted, 1)
             if cat == 'truck':
                 str = truck.truck_filter(frame, frame_duration_formatted, 1)
             df = pd.concat([df, str])
             if len(str.name.unique()) != 0:
-                sav(frame, frame_duration_formatted, str, save_catalog, ramka, probability,save_frame)
+                sav(frame, frame_duration_formatted, str, save_catalog, ramka, probability, save_frame, clas)
 # удалить точку продолжительности из списка, так как эта точка длительности уже сохранена
             try:
                 saving_frames_durations.pop(0)
@@ -93,4 +88,4 @@ def detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_fram
     return df
 
 
-print(detection_on_cadr('Данные для обучения нейросети/Каски и жилеты/IMG_4304.MOV', 'person', 'test_people1', 1, 1, 1))
+print(detection_on_cadr('Данные для обучения нейросети/Каски и жилеты/2_5316527831449086328.MOV', 'person', 'test_people1', 1, 1, 0, 1))
