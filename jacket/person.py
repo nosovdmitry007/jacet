@@ -170,7 +170,7 @@ class Kadr:
         return cadre
 
 
-def sav(kadr, name, fil, put, ramka, probability,save_frame,clas = 0):
+def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
     if not os.path.exists(put):
         os.makedirs(put)
         os.makedirs(f"{put}/images")
@@ -201,12 +201,12 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas = 0):
 
     if ramka == 1:
         for k in fil.values.tolist():
-            if k[6] != 'person' or clas == 0:
+            if k[6] != 'person' or clas_box == 0:
                 cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 2)
                 if probability == 1:
                     cv2.putText(kadr, str(round(k[4],2)), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
                                 fontScale=0.8, color=(0, 255, 0), thickness=2)
-            if k[6] == 'person' and clas == 1:
+            if k[6] == 'person' and clas_box == 1:
                 if k[8] == 'None':
                     cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 2)
                     if probability == 1:

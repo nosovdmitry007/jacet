@@ -33,7 +33,7 @@ def get_saving_frames_durations( cap, saving_fps):
     return s
 
 
-def detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_frame,clas = 0):
+def detection_on_cadr(video_file,cat, save_catalog, ramka, probability, save_frame, clas=0,clas_box=0):
     SAVING_FRAMES_PER_SECOND = 10
     filename, _ = os.path.splitext(video_file)
     filename += "-opencv"
@@ -77,7 +77,7 @@ def detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_fram
                 str = truck.truck_filter(frame, frame_duration_formatted, 1)
             df = pd.concat([df, str])
             if len(str.name.unique()) != 0:
-                sav(frame, frame_duration_formatted, str, save_catalog, ramka, probability, save_frame, clas)
+                sav(frame, frame_duration_formatted, str, save_catalog, ramka, probability, save_frame, clas_box)
 # удалить точку продолжительности из списка, так как эта точка длительности уже сохранена
             try:
                 saving_frames_durations.pop(0)
@@ -88,4 +88,4 @@ def detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_fram
     return df
 
 
-print(detection_on_cadr('Данные для обучения нейросети/Каски и жилеты/2_5316527831449086328.MOV', 'person', 'test_people1', 1, 1, 0, 1))
+print(detection_on_cadr('Данные для обучения нейросети/Каски и жилеты/2_5316527831449086328.MOV', 'person', 'test_people1', 1, 1, 0, 1,1))
