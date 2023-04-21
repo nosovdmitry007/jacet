@@ -191,7 +191,7 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
         os.makedirs(f"{put}{sleh}txt_yolo")
     if not os.path.exists(f"{put}{sleh}save_frame"):
         os.makedirs(f"{put}{sleh}save_frame")
-    # name = name.replace(':', '_')
+    name = name.replace(':', '_')
     colum = ['class', 'xmin', 'ymin', 'xmax', 'ymax']
     if kadr.shape[0] < kadr.shape[1]:
         kadr = imutils.resize(kadr, height=1280)
