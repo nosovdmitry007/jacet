@@ -88,4 +88,4 @@ def detection_on_cadr(video_file,cat, save_catalog, ramka, probability, save_fra
     return df
 
 
-print(detection_on_cadr('Данные для обучения нейросети/Каски и жилеты/2_5316527831449086328.MOV', 'person', 'test_people1', 1, 1, 0, 1,1))
+print(detection_on_cadr('Данные для обучения нейросети/Каски и жилеты/pribrezhny_1_1680499883_59.mp4', 'person', 'test_people2', 1, 1, 0, 1,1))

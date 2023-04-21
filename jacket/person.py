@@ -8,12 +8,12 @@ import pandas as pd
 from datetime import timedelta
 import os
 from tensorflow.keras.models import load_model
-
+import platform
 
 class People:
     def __init__(self):
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                  path='./model/yolov5m6.pt',
+                                  path='./model/person.pt',
                                   source='local')
         self.model_class = load_model('./model/classification.h5', compile=False)
     def kadr(self, img):
@@ -32,8 +32,8 @@ class People:
         image = self.kadr(image)
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.3)[0])
-        df = df.drop(np.where(df['name'] != 'person')[0])
+        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        # df = df.drop(np.where(df['name'] != 'person')[0])
         if video == 1:
             df['time_cadr'] = cad
         if classificator == 1:
@@ -171,21 +171,27 @@ class Kadr:
 
 
 def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
+    sistem = platform.system()
+    if 'Win' in sistem:
+        sleh = '\\'
+    else:
+        sleh = '/'
+
     if not os.path.exists(put):
         os.makedirs(put)
-        os.makedirs(f"{put}/images")
-        os.makedirs(f"{put}/save_frame")
-        os.makedirs(f"{put}/txt")
-        os.makedirs(f"{put}/txt_yolo")
-    if not os.path.exists(f"{put}/images"):
-        os.makedirs(f"{put}/images")
-    if not os.path.exists(f"{put}/txt"):
-        os.makedirs(f"{put}/txt")
-    if not os.path.exists(f"{put}/txt_yolo"):
-        os.makedirs(f"{put}/txt_yolo")
-    if not os.path.exists(f"{put}/save_frame"):
-        os.makedirs(f"{put}/save_frame")
-
+        os.makedirs(f"{put}{sleh}images")
+        os.makedirs(f"{put}{sleh}save_frame")
+        os.makedirs(f"{put}{sleh}txt")
+        os.makedirs(f"{put}{sleh}txt_yolo")
+    if not os.path.exists(f"{put}{sleh}images"):
+        os.makedirs(f"{put}{sleh}images")
+    if not os.path.exists(f"{put}{sleh}txt"):
+        os.makedirs(f"{put}{sleh}txt")
+    if not os.path.exists(f"{put}{sleh}txt_yolo"):
+        os.makedirs(f"{put}{sleh}txt_yolo")
+    if not os.path.exists(f"{put}{sleh}save_frame"):
+        os.makedirs(f"{put}{sleh}save_frame")
+    # name = name.replace(':', '_')
     colum = ['class', 'xmin', 'ymin', 'xmax', 'ymax']
     if kadr.shape[0] < kadr.shape[1]:
         kadr = imutils.resize(kadr, height=1280)
@@ -196,7 +202,7 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
         sd = 0
         for k in fil.values.tolist():
             crop_img = kadr[int(k[1]):int(k[3]),int(k[0]):int(k[2])]
-            cv2.imwrite(f"{put}/save_frame/frame8_{name}_{sd}.jpg", crop_img)
+            cv2.imwrite(f"{put}{sleh}save_frame{sleh}frame8_{name}_{sd}.jpg", crop_img)
             sd += 1
 
     if ramka == 1:
@@ -225,9 +231,9 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
                                     fontScale=0.8, color=(0, 255, 0), thickness=2)
 
 
-    cv2.imwrite(f"{put}/images/frame_{name}.jpg", kadr)
+    cv2.imwrite(f"{put}{sleh}images{sleh}frame_{name}.jpg", kadr)
 
-    fil.to_csv(f"{put}/txt/frame_{name}.txt", columns=colum, header=False, sep='\t', index=False)
+    fil.to_csv(f"{put}{sleh}txt{sleh}frame_{name}.txt", columns=colum, header=False, sep='\t', index=False)
     yolo = []
 
     for row in fil.values.tolist():
@@ -237,7 +243,7 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
         yolo.append(y)
 
     dy = pd.DataFrame(yolo, columns=colum)
-    dy.to_csv(f"{put}/txt_yolo/frame_yolo_{name}.txt", columns=colum, header=False, sep='\t', index=False)
+    dy.to_csv(f"{put}{sleh}txt_yolo{sleh}frame_yolo_{name}.txt", columns=colum, header=False, sep='\t', index=False)
 
 
 
