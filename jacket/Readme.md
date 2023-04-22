@@ -323,6 +323,7 @@ detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_frame,cl
 video_file - путь к файлу
 cat - какой класс детектировать ('person','chasha','truck')
 save_catalog - путь к каталогу для сохранения кадров
+kad = считывание кадра (1 раз в kad секунд (для покадрового считывания 1/fps))
 ramka - рисовать рамку или нет (1,0)
 probability - подписывать рамку или нет (1,0)
 save_frame - сохранять картинку в рамке или нет (1,0)

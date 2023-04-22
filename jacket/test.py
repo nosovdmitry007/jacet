@@ -1,10 +1,9 @@
 
 import pandas as pd
 from tqdm import tqdm
-from person import People, Kadr, sav, Jalet, Chasha
+from person import People, Kadr, sav,  Chasha
 
 people = People()
-jalet = Jalet()
 chasha = Chasha()
 kad = Kadr()
 
@@ -15,7 +14,7 @@ print(test)
 
 
 def person_filter_video(put):
-    z = kad.cadre(put)
+    z = kad.cadre(put,10)
     df = pd.DataFrame()
     for i in tqdm(z, ncols=100):
         str = people.person_filter(i[0],i[1],'person',1)
@@ -24,16 +23,6 @@ def person_filter_video(put):
             sav(i[0], i[1], str,'test')
     return df
 
-
-def jalet_filter_video(put):
-    z = kad.cadre(put)
-    df = pd.DataFrame()
-    for i in tqdm(z, ncols=100):
-        str = jalet.jalet_filter(i[0],i[1],1)
-        df = pd.concat([df, str])
-        if len(str.name.unique()) != 0:
-            sav(i[0], i[1], str,'test')
-    return df
 
 def chasha_filter_video(put):
     z = kad.cadre(put)

@@ -2,12 +2,13 @@ from datetime import timedelta
 import cv2
 import pandas as pd
 import os
-from person import People,  sav,  Chasha, Truck
+from person import People,  sav,  Chasha, Truck, STK
 import numpy as np
 
 people = People()
 chasha = Chasha()
 truck = Truck()
+stk = STK()
 
 def format_timedelta( td):
     """Служебная функция для классного форматирования объектов timedelta (например, 00:00:20.05)
@@ -28,26 +29,27 @@ def get_saving_frames_durations( cap, saving_fps):
     # получаем продолжительность клипа, разделив количество кадров на количество кадров в секунду
     clip_duration = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
     # используйте np.arange () для выполнения шагов с плавающей запятой
-    for i in np.arange(0, clip_duration, 1 / saving_fps):
+    for i in np.arange(0, clip_duration,  saving_fps):
         s.append(i)
     return s
 
 
-def detection_on_cadr(video_file,cat, save_catalog, ramka, probability, save_frame, clas=0,clas_box=0):
-    SAVING_FRAMES_PER_SECOND = 10
-    filename, _ = os.path.splitext(video_file)
-    filename += "-opencv"
-    # создаем папку по названию видео файла
-    if not os.path.isdir(filename):
-        os.mkdir(filename)
+def detection_on_cadr(video_file,cat, save_catalog, kad, ramka, probability, save_frame, clas=0,clas_box=0):
+    # SAVING_FRAMES_PER_SECOND = kad
+    # filename, _ = os.path.splitext(video_file)
+    # filename += "-opencv"
+    # # создаем папку по названию видео файла
+    # if not os.path.isdir(filename):
+    #     os.mkdir(filename)
     # читать видео файл
     cap = cv2.VideoCapture(video_file)
     # получить FPS видео
     fps = cap.get(cv2.CAP_PROP_FPS)
+    # print(fps)
     # если SAVING_FRAMES_PER_SECOND выше видео FPS, то установите его на FPS (как максимум)
-    saving_frames_per_second = min(fps, SAVING_FRAMES_PER_SECOND)
+    # saving_frames_per_second = min(fps, SAVING_FRAMES_PER_SECOND)
     # получить список длительностей для сохранения
-    saving_frames_durations = get_saving_frames_durations(cap, saving_frames_per_second)
+    saving_frames_durations = get_saving_frames_durations(cap, kad)
     # запускаем цикл
     count = 0
     df = pd.DataFrame()
@@ -75,6 +77,8 @@ def detection_on_cadr(video_file,cat, save_catalog, ramka, probability, save_fra
                 str = chasha.chasha_filter(frame, frame_duration_formatted, 1)
             if cat == 'truck':
                 str = truck.truck_filter(frame, frame_duration_formatted, 1)
+            if cat == 'stk':
+                str = stk.stk_filter(frame, frame_duration_formatted, 1)
             df = pd.concat([df, str])
             if len(str.name.unique()) != 0:
                 sav(frame, frame_duration_formatted, str, save_catalog, ramka, probability, save_frame, clas_box)
@@ -88,4 +92,4 @@ def detection_on_cadr(video_file,cat, save_catalog, ramka, probability, save_fra
     return df
 
 
-print(detection_on_cadr('Данные для обучения нейросети/Каски и жилеты/pribrezhny_1_1680499883_59.mp4', 'person', 'test_people2', 1, 1, 0, 1,1))
+print(detection_on_cadr('./Данные для обучения нейросети/Каски и жилеты/VID_20230412_154520.mp4', 'person', 'test_p1', 15, 0, 0, 0, 0, 0))
