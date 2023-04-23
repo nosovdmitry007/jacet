@@ -318,7 +318,7 @@ drive.mount('/content/drive')
 
 # Пример вызова:
 ```
-detection_on_cadr(video_file,cat, save_catalog, ramka, probability,save_frame,clas = 0)
+detection_on_cadr(video_file,cat, save_catalog, kad, ramka, probability,save_frame,clas = 0)
 
 video_file - путь к файлу
 cat - какой класс детектировать ('person','chasha','truck')
