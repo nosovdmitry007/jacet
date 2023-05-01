@@ -20,12 +20,6 @@ class People:
                                   path='./model/classificator.pt',
                                   source='local',
                                   force_reload=True)
-    def kadr(self, img):
-        if img.shape[0] < img.shape[1]:
-            image = imutils.resize(img, width=1280)
-        else:
-            image = imutils.resize(img, height=1280)
-        return image
 
     def person_filter(self, put, cad='1', video=0, classificator=0):
         if video == 0:
@@ -33,7 +27,7 @@ class People:
         else:
             image = put
 
-        image = self.kadr(image)
+
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
         df = df.drop(np.where(df['confidence'] < 0.3)[0])
@@ -75,19 +69,12 @@ class Truck:
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
                                   path='./model/truck.pt',
                                   source='local')
-    def kadr(self, img):
-        if img.shape[0] < img.shape[1]:
-            image = imutils.resize(img, width=1280)
-        else:
-            image = imutils.resize(img, height=1280)
-        return image
 
     def truck_filter(self, put, cad='1', video=0):
         if video == 0:
             image = cv2_ext.imread(put)
         else:
             image = put
-        image = self.kadr(image)
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
         # print(df)
@@ -102,19 +89,12 @@ class STK:
                                   path='./model/stk.pt',
                                   source='local')
 
-    def kadr(self, img):
-        if img.shape[0] < img.shape[1]:
-            image = imutils.resize(img, width=1280)
-        else:
-            image = imutils.resize(img, height=1280)
-        return image
-
     def stk_filter(self, put, cad='1', video=0):
         if video == 0:
             image = cv2_ext.imread(put)
         else:
             image = put
-        image = self.kadr(image)
+
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
         # print(df)
@@ -130,12 +110,6 @@ class Chasha:
                                                   path='./model/chasha.pt',
                                                   source='local')
 
-    def kadr(self, img):
-        if img.shape[0] < img.shape[1]:
-            image = imutils.resize(img, width=1280)
-        else:
-            image = imutils.resize(img, height=1280)
-        return image
 
     def chasha_filter(self, put, cad='1', video=0):
 
@@ -143,8 +117,8 @@ class Chasha:
             image = cv2_ext.imread(put)
         else:
             image = put
-        image = self.kadr(image)
         results = self.model_detect_chasha(image)
+        # print(results)
         df = results.pandas().xyxy[0]
         df = df.drop(np.where(df['confidence'] < 0.1)[0])
         if video == 1:
@@ -176,6 +150,35 @@ class Kadr:
         return s
 
 
+def previu_video(kadr, fil, probability, clas_box):
+    #проходим по каждой строке из датасета с найденными объектами на кадре
+    for k in fil.values.tolist():
+        if k[6] != 'person' or clas_box == 0:
+            cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 1)
+            if probability == 1:
+                cv2.putText(kadr, str(k[6]) + ' ' + str(round(k[4], 2)), (int(k[0]), int(k[1]) - 5),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale=0.8, color=(0, 255, 0), thickness=2)
+        if k[6] == 'person' and clas_box == 1:
+            if k[8] == 'None':
+                cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 1)
+                if probability == 1:
+                    cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                                fontScale=0.8, color=(0, 255, 0), thickness=2)
+
+            if k[8] == 'JacketAndHat':
+                cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 255, 0), 1)
+                if probability == 1:
+                    cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                                fontScale=0.8, color=(0, 255, 0), thickness=2)
+            if k[8] == 'Hat' or k[8] == 'Jacket':
+                cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (255, 0, 0), 1)
+                if probability == 1:
+                    cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                                fontScale=0.8, color=(0, 255, 0), thickness=2)
+    return kadr
+
+
 def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
     sistem = platform.system()
     if 'Win' in sistem:
@@ -199,10 +202,6 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
         os.makedirs(f"{put}{sleh}save_frame")
     name = name.replace(':', '_')
     colum = ['class', 'xmin', 'ymin', 'xmax', 'ymax']
-    if kadr.shape[0] < kadr.shape[1]:
-        kadr = imutils.resize(kadr, width=1280)
-    else:
-        kadr = imutils.resize(kadr, height=1280)
 
     if save_frame == 1:
         sd = 0
@@ -212,32 +211,9 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
             sd += 1
 
     if ramka == 1:
-        for k in fil.values.tolist():
-            if k[6] != 'person' or clas_box == 0:
-                cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 1)
-                if probability == 1:
-                    cv2.putText(kadr, str(k[6])+' ' +str(round(k[4],2)), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=0.8, color=(0, 255, 0), thickness=2)
-            if k[6] == 'person' and clas_box == 1:
-                if k[8] == 'None':
-                    cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 1)
-                    if probability == 1:
-                        cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
-                                    fontScale=0.8, color=(0, 255, 0), thickness=2)
+        kadr = previu_video(kadr, fil, probability, clas_box)
 
-                if k[8] == 'JacketAndHat':
-                    cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 255, 0), 1)
-                    if probability == 1:
-                        cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
-                                    fontScale=0.8, color=(0, 255, 0), thickness=2)
-                if k[8] == 'Hat' or k[8] == 'Jacket':
-                    cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (255, 0, 0), 1)
-                    if probability == 1:
-                        cv2.putText(kadr, str(k[8]), (int(k[0]), int(k[1]) - 5), cv2.FONT_HERSHEY_SIMPLEX,
-                                    fontScale=0.8, color=(0, 255, 0), thickness=2)
-
-
-    cv2.imwrite(f"{put}{sleh}images{sleh}frame11_{name}.jpg", kadr)
+    cv2.imwrite(f"{put}{sleh}images{sleh}frame1_{name}.jpg", kadr)
 
     fil.to_csv(f"{put}{sleh}txt{sleh}frame_{name}.txt", columns=colum, header=False, sep='\t', index=False)
     yolo = []
@@ -251,9 +227,4 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
     dy = pd.DataFrame(yolo, columns=colum)
     dy.to_csv(f"{put}{sleh}txt_yolo{sleh}frame_yolo_{name}.txt", columns=colum, header=False, sep='\t', index=False)
 
-
-
-
-
-
-
+#

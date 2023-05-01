@@ -31,14 +31,16 @@ def config_dataset_yolo5(put_in,img,labl,tr,put_out):
         os.makedirs(val_txt)
 
     for i in range(0, train):
+        txt = ''
         os.replace(put_img + sleh + img[i], train_img + sleh + img[i])
-        txt = img[i].split('.')[0] + '.txt'
+        txt = img[i][:-4] + '.txt'
         os.replace(put_txt + sleh + txt, train_txt + sleh + txt)
 
-    for j in range(train, len(img)):
+    for j in range(train+1, len(img)):
+        txt = ''
         os.replace(put_img + sleh + img[j], val_img + sleh + img[j])
-        txt = img[j].split('.')[0]+'.txt'
+        txt = img[j][:-4] + '.txt'
         os.replace(put_txt + sleh + txt, val_txt + sleh + txt)
 
 
-config_dataset_yolo5('./person/dat/dataset','images','labels',80,'./person/dat/dataset/train')
+config_dataset_yolo5('./Данные для обучения нейросети/Поднятие СТК/stk', 'images', 'labels', 80, './Данные для обучения нейросети/Поднятие СТК/')

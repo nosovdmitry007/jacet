@@ -2,8 +2,9 @@ from datetime import timedelta
 import cv2
 import pandas as pd
 import os
-from person import People,  sav,  Chasha, Truck, STK
+from person import People,  sav,  Chasha, Truck, STK, previu_video
 import numpy as np
+import imutils
 
 people = People()
 chasha = Chasha()
@@ -34,22 +35,35 @@ def get_saving_frames_durations( cap, saving_fps):
     return s
 
 
-def detection_on_cadr(video_file,cat, save_catalog, kad, ramka, probability, save_frame, clas=0,clas_box=0):
-    # SAVING_FRAMES_PER_SECOND = kad
-    # filename, _ = os.path.splitext(video_file)
-    # filename += "-opencv"
-    # # создаем папку по названию видео файла
-    # if not os.path.isdir(filename):
-    #     os.mkdir(filename)
+def detection_on_cadr(video_file, cat, save_catalog, kad, ramka, probability, save_frame, clas=0, clas_box=0, prev_video=0):
+
+
     # читать видео файл
     cap = cv2.VideoCapture(video_file)
     # получить FPS видео
     fps = cap.get(cv2.CAP_PROP_FPS)
-    # print(fps)
+    #Подготовка для записи видео, с детекцией
+    if prev_video == 1:
+        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)   # float `width`
+        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
+        #Конвертируем разрешение под выходное из НС
+        if width > height:
+            height = height/(width/1280)
+            width = 1280
+        else:
+            width = width/(height/1280)
+            height = 1280
+        frameSize = (int(width), int(height))
+        out_put_video = video_file[:-4]+'_previu_'+'.mp4'
+        out = cv2.VideoWriter(out_put_video, cv2.VideoWriter_fourcc(*'MP4V'), fps, frameSize)
+    if kad != 'fps':
+        SAVING_FRAMES_PER_SECOND = kad
+    else:
+        SAVING_FRAMES_PER_SECOND = 1/fps
     # если SAVING_FRAMES_PER_SECOND выше видео FPS, то установите его на FPS (как максимум)
-    # saving_frames_per_second = min(fps, SAVING_FRAMES_PER_SECOND)
+    saving_frames_per_second = min(fps, SAVING_FRAMES_PER_SECOND)
     # получить список длительностей для сохранения
-    saving_frames_durations = get_saving_frames_durations(cap, kad)
+    saving_frames_durations = get_saving_frames_durations(cap, saving_frames_per_second)
     # запускаем цикл
     count = 0
     df = pd.DataFrame()
@@ -70,26 +84,42 @@ def detection_on_cadr(video_file,cat, save_catalog, kad, ramka, probability, sav
             # если ближайшая длительность меньше или равна длительности кадра,
             # затем сохраняем фрейм
             frame_duration_formatted = format_timedelta(timedelta(seconds=frame_duration))
-        #Выбираем модель которую вызываем
+
+            if frame.shape[0] < frame.shape[1]:
+                frame = imutils.resize(frame, width=1280)
+            else:
+                frame = imutils.resize(frame, height=1280)
+            #Выбираем модель которую вызываем
             if cat == 'person':
-                str = people.person_filter(frame, frame_duration_formatted, 1, clas)
+                strok = people.person_filter(frame, frame_duration_formatted, 1, clas)
             if cat == 'chasha':
-                str = chasha.chasha_filter(frame, frame_duration_formatted, 1)
+                strok = chasha.chasha_filter(frame, frame_duration_formatted, 1)
             if cat == 'truck':
-                str = truck.truck_filter(frame, frame_duration_formatted, 1)
+                strok = truck.truck_filter(frame, frame_duration_formatted, 1)
             if cat == 'stk':
-                str = stk.stk_filter(frame, frame_duration_formatted, 1)
-            df = pd.concat([df, str])
-            if len(str.name.unique()) != 0:
-                sav(frame, frame_duration_formatted, str, save_catalog, ramka, probability, save_frame, clas_box)
+                strok = stk.stk_filter(frame, frame_duration_formatted, 1)
+            #формирование финального датафрейма с найденными объектами
+            df = pd.concat([df, strok])
+            #Если необходимо создавать превью
+            if prev_video == 0:
+                if len(strok.name.unique()) != 0:
+                    sav(frame, frame_duration_formatted, strok, save_catalog, ramka, probability, save_frame, clas_box)
+            else:
+                if len(strok.name.unique()) != 0:
+                    kad = previu_video(frame, strok, probability, clas_box)
+                else:
+                    kad = frame
+                out.write(kad)
 # удалить точку продолжительности из списка, так как эта точка длительности уже сохранена
             try:
                 saving_frames_durations.pop(0)
             except IndexError:
                 pass
         # увеличить количество кадров
+
         count += 1
+    out.release()
     return df
 
 
-print(detection_on_cadr('./Данные для обучения нейросети/Каски и жилеты/pribrezhny_1_1680499883_59.mp4', 'person', 'test_chasha1q', 10, 1, 1, 0, 1, 1))
+print(detection_on_cadr('./Данные для обучения нейросети/Каски и жилеты/pribrezhny_1_1680499883_59.mp4', 'person', 'person_test', 'fps', 1, 1, 0, 1, 1, 1))
