@@ -1,11 +1,9 @@
 import cv2
 import cv2_ext
 import pybboxes as pbx
-import imutils
 import numpy as np
 import torch
 import pandas as pd
-from datetime import timedelta
 import os
 from torchvision import transforms as T
 import torch.nn.functional as F
@@ -13,13 +11,17 @@ import platform
 
 class People:
     def __init__(self):
+        device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                  path='./model/person.pt',
-                                  source='local')
+                                                    path='./model/person.pt',
+                                                    source='local',
+                                                    device=device)
         self.model_class = torch.hub.load('./yolov5_master', 'custom',
-                                  path='./model/classificator.pt',
-                                  source='local',
-                                  force_reload=True)
+                                            path='./model/classificator.pt',
+                                            source='local',
+                                            # force_reload=True,
+                                            device=device
+                                          )
 
     def person_filter(self, put, cad='1', video=0, classificator=0):
         if video == 0:
@@ -43,11 +45,7 @@ class People:
                     [T.ToTensor(), T.Resize(size), T.CenterCrop(size), T.Normalize(IMAGENET_MEAN, IMAGENET_STD)])
             clas = []
             for k in df.values.tolist():
-                # print(k)
                 kad = image[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
-                # kad = cv2.cvtColor(kad,cv2.COLOR_RGB2BGR)
-                # print(kad)
-                # cv2.imwrite(f"jacket/test_people2/save_frame/kda{k[1]}.jpg", kad)
                 transformations = classify_transforms()
                 convert_tensor = transformations(kad)
                 convert_tensor = convert_tensor.unsqueeze(0)
@@ -58,17 +56,17 @@ class People:
                 mx = max(k)
                 z = k.index(mx)
                 clas.append(self.model_class.names[z])
-                # print(clas)
             df['class_people'] = clas
-            # print(df)
         return df
 
 
 class Truck:
     def __init__(self):
+        device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                  path='./model/truck.pt',
-                                  source='local')
+                                                    path='./model/truck.pt',
+                                                    source='local',
+                                                    device=device)
 
     def truck_filter(self, put, cad='1', video=0):
         if video == 0:
@@ -77,7 +75,6 @@ class Truck:
             image = put
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
-        # print(df)
         df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
@@ -85,9 +82,11 @@ class Truck:
 
 class STK:
     def __init__(self):
+        device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                  path='./model/stk.pt',
-                                  source='local')
+                                                    path='./model/stk.pt',
+                                                    source='local',
+                                                    device=device)
 
     def stk_filter(self, put, cad='1', video=0):
         if video == 0:
@@ -97,7 +96,6 @@ class STK:
 
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
-        # print(df)
         df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
@@ -106,9 +104,11 @@ class STK:
 
 class Chasha:
     def __init__(self):
+        device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_chasha = torch.hub.load('./yolov5_master', 'custom',
                                                   path='./model/chasha.pt',
-                                                  source='local')
+                                                  source='local',
+                                                  device=device)
 
 
     def chasha_filter(self, put, cad='1', video=0):
@@ -118,7 +118,6 @@ class Chasha:
         else:
             image = put
         results = self.model_detect_chasha(image)
-        # print(results)
         df = results.pandas().xyxy[0]
         df = df.drop(np.where(df['confidence'] < 0.1)[0])
         if video == 1:

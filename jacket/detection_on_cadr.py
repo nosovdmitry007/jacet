@@ -1,7 +1,6 @@
 from datetime import timedelta
 import cv2
 import pandas as pd
-import os
 from person import People,  sav,  Chasha, Truck, STK, previu_video
 import numpy as np
 import imutils
@@ -79,6 +78,7 @@ def detection_on_cadr(video_file, cat, save_catalog, kad, ramka, probability, sa
             closest_duration = saving_frames_durations[0]
         except IndexError:
             # список пуст, все кадры длительности сохранены
+
             break
         if frame_duration >= closest_duration:
             # если ближайшая длительность меньше или равна длительности кадра,
