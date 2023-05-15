@@ -318,9 +318,10 @@ drive.mount('/content/drive')
 
 # Пример вызова:
 ```
-detection_on_cadr(video_file, cat, save_catalog, kad, ramka, probability, save_frame, clas, clas_box, prev_video):
+detection_on_cadr(video_file, al, cat, save_catalog, kad, ramka, probability, save_frame, clas, clas_box, prev_video):
 
 video_file - путь к файлу
+al - запустить детекцию по всем объектам (1,0)
 cat - какой класс детектировать ('person','chasha','truck')
 save_catalog - путь к каталогу для сохранения кадров
 kad = считывание кадра (1 раз в kad секунд (для покадрового считывания 1/fps))

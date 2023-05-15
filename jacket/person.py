@@ -25,7 +25,7 @@ class People:
 
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.3)[0])
+        df = df.drop(np.where(df['confidence'] < 0.2)[0])
         if video == 1:
             df['time_cadr'] = cad
         if classificator == 1:
@@ -67,7 +67,7 @@ class Truck:
             image = put
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.3)[0])
+        df = df.drop(np.where(df['confidence'] < 0.1)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -88,7 +88,7 @@ class STK:
 
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.3)[0])
+        df = df.drop(np.where(df['confidence'] < 0.2)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -111,7 +111,7 @@ class Chasha:
             image = put
         results = self.model_detect_chasha(image)
         df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.3)[0])
+        df = df.drop(np.where(df['confidence'] < 0.2)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df

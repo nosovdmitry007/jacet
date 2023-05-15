@@ -34,7 +34,7 @@ def get_saving_frames_durations( cap, saving_fps):
     return s
 
 
-def detection_on_cadr(video_file, cat, save_catalog, kad, ramka, probability, save_frame, clas=0, clas_box=0, prev_video=0):
+def detection_on_cadr(video_file, al, cat, save_catalog, kad, ramka, probability, save_frame, clas=0, clas_box=0, prev_video=0):
 
 
     # читать видео файл
@@ -90,14 +90,22 @@ def detection_on_cadr(video_file, cat, save_catalog, kad, ramka, probability, sa
             else:
                 frame = imutils.resize(frame, height=1280)
             #Выбираем модель которую вызываем
-            if cat == 'person':
-                strok = people.person_filter(frame, frame_duration_formatted, 1, clas)
-            if cat == 'chasha':
-                strok = chasha.chasha_filter(frame, frame_duration_formatted, 1)
-            if cat == 'truck':
-                strok = truck.truck_filter(frame, frame_duration_formatted, 1)
-            if cat == 'stk':
-                strok = stk.stk_filter(frame, frame_duration_formatted, 1)
+            if al == 0:
+                if cat == 'person':
+                    strok = people.person_filter(frame, frame_duration_formatted, 1, clas)
+                if cat == 'chasha':
+                    strok = chasha.chasha_filter(frame, frame_duration_formatted, 1)
+                if cat == 'truck':
+                    strok = truck.truck_filter(frame, frame_duration_formatted, 1)
+                if cat == 'stk':
+                    strok = stk.stk_filter(frame, frame_duration_formatted, 1)
+            if al == 1:
+                    strok_p = people.person_filter(frame, frame_duration_formatted, 1, clas)
+                    strok_c = chasha.chasha_filter(frame, frame_duration_formatted, 1)
+                    strok_t = truck.truck_filter(frame, frame_duration_formatted, 1)
+                    strok_s = stk.stk_filter(frame, frame_duration_formatted, 1)
+                    strok = pd.concat([strok_p,strok_s,strok_t,strok_c])
+
             #формирование финального датафрейма с найденными объектами
             df = pd.concat([df, strok])
             #Если необходимо создавать превью
@@ -122,4 +130,4 @@ def detection_on_cadr(video_file, cat, save_catalog, kad, ramka, probability, sa
     return df
 
 
-print(detection_on_cadr('./Данные для обучения нейросети/Каски и жилеты/pribrezhny_1_1680499883_59.mp4', 'person', 'person_test', 'fps', 1, 1, 0, 1, 1, 1))
+print(detection_on_cadr('./Данные для обучения нейросети/безымянный.mp4', 1, 'person', 'person_test', 'fps', 1, 1, 0, 1, 1, 1))
