@@ -5,8 +5,6 @@ import numpy as np
 import torch
 import pandas as pd
 import os
-from torchvision import transforms as T
-import torch.nn.functional as F
 import platform
 
 class People:
@@ -16,12 +14,7 @@ class People:
                                                     path='./model/person.pt',
                                                     source='local',
                                                     device=device)
-        self.model_class = torch.hub.load('./yolov5_master', 'custom',
-                                            path='./model/classificator.pt',
-                                            source='local',
-                                            # force_reload=True,
-                                            device=device
-                                          )
+        self.model_class = cv2.dnn.readNetFromONNX ('./model/classificator.onnx')
 
     def person_filter(self, put, cad='1', video=0, classificator=0):
         if video == 0:
@@ -33,29 +26,28 @@ class People:
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
         df = df.drop(np.where(df['confidence'] < 0.3)[0])
-        # df = df.drop(np.where(df['name'] != 'person')[0])
         if video == 1:
             df['time_cadr'] = cad
         if classificator == 1:
-            IMAGENET_MEAN = 0.485, 0.456, 0.406
-            IMAGENET_STD = 0.229, 0.224, 0.225
-
-            def classify_transforms(size=224):
-                return T.Compose(
-                    [T.ToTensor(), T.Resize(size), T.CenterCrop(size), T.Normalize(IMAGENET_MEAN, IMAGENET_STD)])
+            CLASSES = ['Hat', 'Jacket', 'JacketAndHat', 'None']
+            args_confidence = 0.3
             clas = []
             for k in df.values.tolist():
                 kad = image[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
-                transformations = classify_transforms()
-                convert_tensor = transformations(kad)
-                convert_tensor = convert_tensor.unsqueeze(0)
 
-                results = self.model_class(convert_tensor)
-                pred = F.softmax(results, dim=1)
-                k = pred[0].tolist()
-                mx = max(k)
-                z = k.index(mx)
-                clas.append(self.model_class.names[z])
+                blob = cv2.dnn.blobFromImage(cv2.resize(kad, (32, 32)), scalefactor=1.0 / 32
+                                             , size=(32, 32), mean=(128, 128, 128), swapRB=True)
+                self.model_class.setInput(blob)
+                detections = self.model_class.forward()
+
+                confidence = abs(detections[0][0] - detections[0][1])
+
+                if (confidence > args_confidence):
+                    class_mark = np.argmax(detections)
+                    clas.append(CLASSES[class_mark])
+                else:
+                    clas.append('None')
+
             df['class_people'] = clas
         return df
 
@@ -119,7 +111,7 @@ class Chasha:
             image = put
         results = self.model_detect_chasha(image)
         df = results.pandas().xyxy[0]
-        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -225,5 +217,3 @@ def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
 
     dy = pd.DataFrame(yolo, columns=colum)
     dy.to_csv(f"{put}{sleh}txt_yolo{sleh}frame_yolo_{name}.txt", columns=colum, header=False, sep='\t', index=False)
-
-#
