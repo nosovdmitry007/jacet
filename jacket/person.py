@@ -7,6 +7,7 @@ import pandas as pd
 import os
 import platform
 
+#Детектор и классификатор людей
 class People:
     def __init__(self):
         device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
@@ -14,23 +15,21 @@ class People:
                                                     path='./model/person.pt',
                                                     source='local',
                                                     device=device)
-        self.model_class = cv2.dnn.readNetFromONNX ('./model/classificator.onnx')
+        self.model_class = cv2.dnn.readNetFromONNX('./model/classificator.onnx')
 
     def person_filter(self, put, cad='1', video=0, classificator=0):
         if video == 0:
             image = cv2_ext.imread(put)
         else:
             image = put
-
-
         results = self.model_detect_people(image)
         df = results.pandas().xyxy[0]
+        #Установка порога уверености модели
         df = df.drop(np.where(df['confidence'] < 0.2)[0])
         if video == 1:
             df['time_cadr'] = cad
         if classificator == 1:
             CLASSES = ['Hat', 'Jacket', 'JacketAndHat', 'None']
-            args_confidence = 0.3
             clas = []
             for k in df.values.tolist():
                 kad = image[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
@@ -39,14 +38,10 @@ class People:
                                              , size=(32, 32), mean=(128, 128, 128), swapRB=True)
                 self.model_class.setInput(blob)
                 detections = self.model_class.forward()
-
-                confidence = abs(detections[0][0] - detections[0][1])
-
-                if (confidence > args_confidence):
-                    class_mark = np.argmax(detections)
-                    clas.append(CLASSES[class_mark])
-                else:
-                    clas.append('None')
+                #преобразуем оценки в вероятности softmax
+                detections = np.exp(detections) / np.sum(np.exp(detections))
+                class_mark = np.argmax(detections)
+                clas.append(CLASSES[class_mark])
 
             df['class_people'] = clas
         return df
