@@ -26,7 +26,7 @@ class People:
             df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
             df['name'] = df['class'].apply(lambda x: result.names[x])
         #Установка порога уверености модели
-        df = df.drop(np.where(df['confidence'] < 0.2)[0])
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
         if classificator == 1:
@@ -62,7 +62,7 @@ class Truck:
             column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
             df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
             df['name'] = df['class'].apply(lambda x: result.names[x])
-        df = df.drop(np.where(df['confidence'] < 0.1)[0])
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -83,7 +83,7 @@ class STK:
             column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
             df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
             df['name'] = df['class'].apply(lambda x: result.names[x])
-        df = df.drop(np.where(df['confidence'] < 0.2)[0])
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -104,7 +104,7 @@ class Chasha:
             column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
             df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
             df['name'] = df['class'].apply(lambda x: result.names[x])
-        df = df.drop(np.where(df['confidence'] < 0.2)[0])
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
