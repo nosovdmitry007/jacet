@@ -1,7 +1,8 @@
 from datetime import timedelta
 import cv2
 import pandas as pd
-from person import People,  sav,  Chasha, Truck, STK, previu_video
+# from person import People,  sav,  Chasha, Truck, STK, previu_video
+from person_yolov8 import People,  sav,  Chasha, Truck, STK, previu_video
 import numpy as np
 import imutils
 

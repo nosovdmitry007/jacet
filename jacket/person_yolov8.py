@@ -6,16 +6,13 @@ import torch
 import pandas as pd
 import os
 import platform
+from ultralytics import YOLO
 
 #Детектор и классификатор людей
 class People:
     def __init__(self):
-        device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                                    path='./model/person.pt',
-                                                    source='local',
-                                                    device=device)
-
+        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        self.model_detect_people = YOLO("./model/person_v8.pt")
         self.model_class = cv2.dnn.readNetFromONNX('./model/classificator.onnx')
 
     def person_filter(self, put, cad='1', video=0, classificator=0):
@@ -23,9 +20,11 @@ class People:
             image = cv2_ext.imread(put)
         else:
             image = put
-        results = self.model_detect_people(image)
-        df = results.pandas().xyxy[0]
-        print(df)
+        results = self.model_detect_people(image,imgsz=1280, device=self.device, classes=0)
+        for result in results:
+            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
+            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
+            df['name'] = df['class'].apply(lambda x: result.names[x])
         #Установка порога уверености модели
         df = df.drop(np.where(df['confidence'] < 0.2)[0])
         if video == 1:
@@ -51,19 +50,18 @@ class People:
 
 class Truck:
     def __init__(self):
-        device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                                    path='./model/truck.pt',
-                                                    source='local',
-                                                    device=device)
-
+        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        self.model_detect_TRUCK = YOLO("./model/truck_v8.pt")
     def truck_filter(self, put, cad='1', video=0):
         if video == 0:
             image = cv2_ext.imread(put)
         else:
             image = put
-        results = self.model_detect_people(image)
-        df = results.pandas().xyxy[0]
+        results = self.model_detect_TRUCK(image, imgsz=1280, device=self.device, classes=0)
+        for result in results:
+            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
+            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
+            df['name'] = df['class'].apply(lambda x: result.names[x])
         df = df.drop(np.where(df['confidence'] < 0.1)[0])
         if video == 1:
             df['time_cadr'] = cad
@@ -71,11 +69,8 @@ class Truck:
 
 class STK:
     def __init__(self):
-        device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                                    path='./model/stk.pt',
-                                                    source='local',
-                                                    device=device)
+        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        self.model_detect_STK = YOLO("./model/stk_v8.pt")
 
     def stk_filter(self, put, cad='1', video=0):
         if video == 0:
@@ -83,8 +78,11 @@ class STK:
         else:
             image = put
 
-        results = self.model_detect_people(image)
-        df = results.pandas().xyxy[0]
+        results = self.model_detect_STK(image, imgsz=1280, device=self.device, classes=0)
+        for result in results:
+            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
+            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
+            df['name'] = df['class'].apply(lambda x: result.names[x])
         df = df.drop(np.where(df['confidence'] < 0.2)[0])
         if video == 1:
             df['time_cadr'] = cad
@@ -93,21 +91,19 @@ class STK:
 
 class Chasha:
     def __init__(self):
-        device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        self.model_detect_chasha = torch.hub.load('./yolov5_master', 'custom',
-                                                  path='./model/chasha.pt',
-                                                  source='local',
-                                                  device=device)
-
-
+        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        self.model_detect_CASHA = YOLO("./model/chasha_v8.pt")
     def chasha_filter(self, put, cad='1', video=0):
 
         if video == 0:
             image = cv2_ext.imread(put)
         else:
             image = put
-        results = self.model_detect_chasha(image)
-        df = results.pandas().xyxy[0]
+        results = self.model_detect_CASHA(image, imgsz=1280, device=self.device, classes=0)
+        for result in results:
+            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
+            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
+            df['name'] = df['class'].apply(lambda x: result.names[x])
         df = df.drop(np.where(df['confidence'] < 0.2)[0])
         if video == 1:
             df['time_cadr'] = cad
