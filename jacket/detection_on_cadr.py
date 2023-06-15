@@ -131,4 +131,4 @@ def detection_on_cadr(video_file, al, cat, save_catalog, kad, ramka, probability
     return df
 
 
-print(detection_on_cadr('./Данные для обучения нейросети/безымянный.mp4', 1, 'person', 'person_test', 'fps', 1, 1, 0, 1, 1, 1))
+print(detection_on_cadr('./Данные для обучения нейросети/test_1.mp4', 0, 'person', 'person_test', 'fps', 1, 1, 0, 0, 0, 1))
