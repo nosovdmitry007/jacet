@@ -30,55 +30,55 @@ class People:
             image = put
         # YOLOv8
         #_________________________________________________________________________________________
-        # results = self.model_detect_people(image, imgsz=1280, device=self.device, classes=0)
-        # for result in results:
-        #     column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
-        #     df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
-        #     df['name'] = df['class'].apply(lambda x: result.names[x])
-        # # Установка порога уверености модели
-        # df = df.drop(np.where(df['confidence'] < 0.3)[0])
+        results = self.model_detect_people(image, imgsz=1280, device=self.device, classes=0)
+        for result in results:
+            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
+            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
+            df['name'] = df['class'].apply(lambda x: result.names[x])
+        # Установка порога уверености модели
+        df = df.drop(np.where(df['confidence'] < 0.3)[0])
         #__________________________________________________________________________________________
         #SAHI
         #___________________________________________________________________________________________
-        results = get_sliced_prediction(
-            image,  # "/content/2023-03-07_21-23-19.JPG",
-            self.detection_model_people,
-            slice_height=None,
-            slice_width=None,
-            overlap_height_ratio=0.2,
-            overlap_width_ratio=0.2,
-            perform_standard_pred=True,
-            postprocess_type="GREEDYNMM",
-
-            postprocess_match_metric="IOU",
-            postprocess_match_threshold=0.25,
-            postprocess_class_agnostic=False,
-            verbose=2,
-            merge_buffer_length=None,
-            auto_slice_resolution=True,
-        )
-        column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'name']
-        row = []
-        for i in range(0,len(results.object_prediction_list)):
-            l = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'name']
-            xmin = results.object_prediction_list[i].bbox.minx
-            xmax = results.object_prediction_list[i].bbox.maxx
-            ymin = results.object_prediction_list[i].bbox.miny
-            ymax = results.object_prediction_list[i].bbox.maxy
-            h = ymax - ymin
-            confidence = results.object_prediction_list[i].score.value
-            clas = results.object_prediction_list[i].category.id
-            nam = results.object_prediction_list[i].category.name
-            if h > 12:
-                l[0] = xmin
-                l[1] = ymin
-                l[2] = xmax
-                l[3] = ymax
-                l[4] = confidence
-                l[5] = clas
-                l[6] = nam
-                row.append(l)
-        df = pd.DataFrame(row, columns=column)
+        # results = get_sliced_prediction(
+        #     image,  # "/content/2023-03-07_21-23-19.JPG",
+        #     self.detection_model_people,
+        #     slice_height=None,
+        #     slice_width=None,
+        #     overlap_height_ratio=0.2,
+        #     overlap_width_ratio=0.2,
+        #     perform_standard_pred=True,
+        #     postprocess_type="GREEDYNMM",
+        #
+        #     postprocess_match_metric="IOU",
+        #     postprocess_match_threshold=0.25,
+        #     postprocess_class_agnostic=False,
+        #     verbose=2,
+        #     merge_buffer_length=None,
+        #     auto_slice_resolution=True,
+        # )
+        # column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'name']
+        # row = []
+        # for i in range(0,len(results.object_prediction_list)):
+        #     l = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'name']
+        #     xmin = results.object_prediction_list[i].bbox.minx
+        #     xmax = results.object_prediction_list[i].bbox.maxx
+        #     ymin = results.object_prediction_list[i].bbox.miny
+        #     ymax = results.object_prediction_list[i].bbox.maxy
+        #     h = ymax - ymin
+        #     confidence = results.object_prediction_list[i].score.value
+        #     clas = results.object_prediction_list[i].category.id
+        #     nam = results.object_prediction_list[i].category.name
+        #     if h > 12:
+        #         l[0] = xmin
+        #         l[1] = ymin
+        #         l[2] = xmax
+        #         l[3] = ymax
+        #         l[4] = confidence
+        #         l[5] = clas
+        #         l[6] = nam
+        #         row.append(l)
+        # df = pd.DataFrame(row, columns=column)
         #________________________________________________________________________________________
 
         if video == 1:
@@ -89,8 +89,8 @@ class People:
             for k in df.values.tolist():
                 kad = image[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
 
-                blob = cv2.dnn.blobFromImage(cv2.resize(kad, (32, 32)), scalefactor=1.0 / 32
-                                             , size=(32, 32), mean=(128, 128, 128), swapRB=True)
+                blob = cv2.dnn.blobFromImage(cv2.resize(kad, (96, 96)), scalefactor=1.0 / 96
+                                             , size=(96, 96), mean=(128, 128, 128), swapRB=True)
                 self.model_class.setInput(blob)
                 detections = self.model_class.forward()
                 #преобразуем оценки в вероятности softmax
