@@ -198,7 +198,7 @@ def previu_video(kadr, fil, probability, clas_box):
                             cv2.FONT_HERSHEY_SIMPLEX,
                             fontScale=0.8, color=(0, 255, 0), thickness=2)
         if k[6] == 'person' and clas_box == 1:
-            print(k)
+            # print(k)
             if k[8] == 'None':
                 cv2.rectangle(kadr, (int(k[0]), int(k[1])), (int(k[2]), int(k[3])), (0, 0, 255), 1)
                 if probability == 1:

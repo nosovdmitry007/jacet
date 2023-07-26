@@ -111,7 +111,7 @@ def detection_on_cadr(video_file, al, cat, save_catalog, kad, ramka, probability
             df = pd.concat([df, strok])
             #Если необходимо создавать превью
             if prev_video == 0:
-                if len(strok.name.unique()) != 0:
+                if len(strok.name.umnique()) != 0:
                     sav(frame, frame_duration_formatted, strok, save_catalog, ramka, probability, save_frame, clas_box)
             else:
                 if len(strok.name.unique()) != 0:
