@@ -7,8 +7,6 @@ import pandas as pd
 import os
 import platform
 from ultralytics import YOLO
-from sahi import AutoDetectionModel
-from sahi.predict import get_sliced_prediction
 
 #Детектор и классификатор людей
 class People:
@@ -16,13 +14,7 @@ class People:
         self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_people = YOLO("./model/person_v8.pt")#./model/model_scripted.pt")
         self.model_class = cv2.dnn.readNetFromONNX('./model/classificator.onnx')
-        self.detection_model_people = AutoDetectionModel.from_pretrained(
-            model_type='yolov8',
-            model_path='./model/person_v8.pt',
-            confidence_threshold=0.3,
-            image_size=1280,
-            device=self.device,  # or 'cpu'
-        )
+
     def person_filter(self, put, cad='1', video=0, classificator=0):
         if video == 0:
             image = cv2_ext.imread(put)
@@ -37,49 +29,6 @@ class People:
             df['name'] = df['class'].apply(lambda x: result.names[x])
         # Установка порога уверености модели
         df = df.drop(np.where(df['confidence'] < 0.3)[0])
-        #__________________________________________________________________________________________
-        #SAHI
-        #___________________________________________________________________________________________
-        # results = get_sliced_prediction(
-        #     image,  # "/content/2023-03-07_21-23-19.JPG",
-        #     self.detection_model_people,
-        #     slice_height=None,
-        #     slice_width=None,
-        #     overlap_height_ratio=0.2,
-        #     overlap_width_ratio=0.2,
-        #     perform_standard_pred=True,
-        #     postprocess_type="GREEDYNMM",
-        #
-        #     postprocess_match_metric="IOU",
-        #     postprocess_match_threshold=0.25,
-        #     postprocess_class_agnostic=False,
-        #     verbose=2,
-        #     merge_buffer_length=None,
-        #     auto_slice_resolution=True,
-        # )
-        # column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'name']
-        # row = []
-        # for i in range(0,len(results.object_prediction_list)):
-        #     l = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'name']
-        #     xmin = results.object_prediction_list[i].bbox.minx
-        #     xmax = results.object_prediction_list[i].bbox.maxx
-        #     ymin = results.object_prediction_list[i].bbox.miny
-        #     ymax = results.object_prediction_list[i].bbox.maxy
-        #     h = ymax - ymin
-        #     confidence = results.object_prediction_list[i].score.value
-        #     clas = results.object_prediction_list[i].category.id
-        #     nam = results.object_prediction_list[i].category.name
-        #     if h > 12:
-        #         l[0] = xmin
-        #         l[1] = ymin
-        #         l[2] = xmax
-        #         l[3] = ymax
-        #         l[4] = confidence
-        #         l[5] = clas
-        #         l[6] = nam
-        #         row.append(l)
-        # df = pd.DataFrame(row, columns=column)
-        #________________________________________________________________________________________
 
         if video == 1:
             df['time_cadr'] = cad

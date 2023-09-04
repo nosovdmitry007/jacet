@@ -43,4 +43,4 @@ def config_dataset_yolo5(put_in,img,labl,tr,put_out):
         os.replace(put_txt + sleh + txt, val_txt + sleh + txt)
 
 
-config_dataset_yolo5('./Данные для обучения нейросети/person/person', 'img_opt', 'labels', 80, './Данные для обучения нейросети/person')
+config_dataset_yolo5('./Данные для обучения нейросети/бетономешалка/project', 'images', 'labels', 80, './Данные для обучения нейросети/бетономешалка')
