@@ -57,36 +57,23 @@ def detection_on_cadr(video_file):
     return cad, fps
 
 def detection(video_file, al, cat, save_catalog, fps, ramka, probability, save_frame, clas=0, clas_box=0, prev_video=0):
-            #Выбираем модель которую вызываем
-    # cap = cv2.VideoCapture(video_file)
-    # if prev_video == 1:
-        # width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float `width`
-        # height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
-        # # Конвертируем разрешение под выходное из НС
-        # if width > height:
-        #     height = height / (width / 1280)
-        #     width = 1280
-        # else:
-        #     width = width / (height / 1280)
-        #     height = 1280
-
     cad, fps = detection_on_cadr(video_file)
 
     time_kad = list(cad.keys())
     kadr = list(cad.values())
-
     frameSize = (kadr[0].shape[1], kadr[0].shape[0])
-
     out_put_video = video_file[:-4] + '_previu_' + '.mp4'
     out = cv2.VideoWriter(out_put_video, cv2.VideoWriter_fourcc(*'MP4V'), fps, frameSize)
-
 
     n = 5
     if len(kadr) > n:
         phot1 = [kadr[i:i + n] for i in range(0, len(kadr), n)]
         nam1 = [time_kad[i:i + n] for i in range(0, len(time_kad), n)]
     df = pd.DataFrame()
+    # kadr = []
     for frame_duration_formatted, frame in zip(nam1, phot1):
+        print(frame_duration_formatted)
+        st1 = time.time()
         if al == 0:
             if cat == 'person':
                 strok = people.person_filter(frame, frame_duration_formatted, 1, clas)
@@ -97,37 +84,39 @@ def detection(video_file, al, cat, save_catalog, fps, ramka, probability, save_f
             if cat == 'stk':
                 strok = stk.stk_filter(frame, frame_duration_formatted, 1)
         if al == 1:
-                strok_p = people.person_filter(frame, frame_duration_formatted, 1, clas)
-                strok_c = chasha.chasha_filter(frame, frame_duration_formatted, 1)
-                strok_t = truck.truck_filter(frame, frame_duration_formatted, 1)
-                strok_s = stk.stk_filter(frame, frame_duration_formatted, 1)
-                strok = pd.concat([strok_p,strok_s,strok_t,strok_c])
+            strok_p = people.person_filter(frame, frame_duration_formatted, 1, clas)
+            strok_c = chasha.chasha_filter(frame, frame_duration_formatted, 1)
+            strok_t = truck.truck_filter(frame, frame_duration_formatted, 1)
+            strok_s = stk.stk_filter(frame, frame_duration_formatted, 1)
+            strok = pd.concat([strok_p,strok_s,strok_t,strok_c])
 
-        #формирование финального датафрейма с найденными объектами
-        df = pd.concat([df, strok])
-        # print(df)
-        #Если необходимо создавать превью
-
-        # if prev_video == 0:
-        # if len(strok.name.umnique()) != 0:
-        #     sav(frame, frame_duration_formatted, strok, save_catalog, ramka, probability, save_frame, clas_box)
-        # else:
+        end1 = time.time()
+        st2 = time.time()
         for n, img in zip(frame_duration_formatted, frame):
             st = strok[strok['time_cadr'] == n]
             if len(st.name.unique()) != 0:
                 kad = previu_video(img, st, probability, clas_box)
             else:
                 kad = img
-            out.write(kad)
+            # out.write(kad)
+            kadr.append(kad)
+        end2 = time.time()
+        st3 = time.time()
+        for k in kadr:
+            out.write(k)
+        end3 = time.time()
+        print('1', (end1 - st1) * 10 ** 3, "ms")
+        print('2', (end2 - st2) * 10 ** 3, "ms")
+        print('3', (end3 - st3) * 10 ** 3, "ms")
+        # формирование финального датафрейма с найденными объектами
+        df = pd.concat([df, strok])
+    out.release()
 
     return df
 
 start = time.time()
 print(detection('./test/test.mp4', 0, 'person', 'person_test', 'fps', 1, 1, 0, 1, 1, 1))
 end = time.time()
-
-# print the difference between start
-# and end time in milli. secs
 print("The time of execution of above program is :",
       (end - start) * 10 ** 3, "ms")
 
