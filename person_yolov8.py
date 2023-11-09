@@ -7,6 +7,8 @@ import pandas as pd
 import os
 import platform
 from ultralytics import YOLO
+from dop_fun import slesh
+
 
 #Детектор и классификатор людей
 class People:
@@ -22,33 +24,35 @@ class People:
             image = put
         # YOLOv8
         #_________________________________________________________________________________________
-        results = self.model_detect_people(image, imgsz=1280, device=self.device, classes=0)
-        for result in results:
+        results = self.model_detect_people(image, imgsz=1280, device=self.device, classes=0, stream=True, conf=0.3)
+        df_c = pd.DataFrame()
+        z = -1
+        for cad1, result in zip(cad,results):
+            z += 1
             column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
             df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
             df['name'] = df['class'].apply(lambda x: result.names[x])
-        # Установка порога уверености модели
-        df = df.drop(np.where(df['confidence'] < 0.3)[0])
+            df['time_cadr'] = cad1
 
-        if video == 1:
-            df['time_cadr'] = cad
-        if classificator == 1:
-            CLASSES = ['Hat', 'Jacket', 'JacketAndHat', 'None']
-            clas = []
-            for k in df.values.tolist():
-                kad = image[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
+            if classificator == 1:
+                CLASSES = ['Hat', 'Jacket', 'JacketAndHat', 'None']
+                clas = []
+                im = image[z]
 
-                blob = cv2.dnn.blobFromImage(cv2.resize(kad, (96, 96)), scalefactor=1.0 / 96
-                                             , size=(96, 96), mean=(128, 128, 128), swapRB=True)
-                self.model_class.setInput(blob)
-                detections = self.model_class.forward()
-                #преобразуем оценки в вероятности softmax
-                detections = np.exp(detections) / np.sum(np.exp(detections))
-                class_mark = np.argmax(detections)
-                clas.append(CLASSES[class_mark])
-
-            df['class_people'] = clas
-        return df
+                for k in df.values.tolist():
+                    kad = im[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
+                    blob = cv2.dnn.blobFromImage(cv2.resize(kad, (96, 96)), scalefactor=1.0 / 96
+                                                 , size=(96, 96), mean=(128, 128, 128), swapRB=True)
+                    self.model_class.setInput(blob)
+                    detections = self.model_class.forward()
+                    #преобразуем оценки в вероятности softmax
+                    detections = np.exp(detections) / np.sum(np.exp(detections))
+                    class_mark = np.argmax(detections)
+                    clas.append(CLASSES[class_mark])
+                df['class_people'] = clas
+            df_c = pd.concat([df_c, df])
+        # print(df_c)
+        return df_c
 
 
 class Truck:
@@ -60,12 +64,11 @@ class Truck:
             image = cv2_ext.imread(put)
         else:
             image = put
-        results = self.model_detect_TRUCK(image, imgsz=1280, device=self.device, classes=0)
+        results = self.model_detect_TRUCK(image, imgsz=1280, device=self.device, classes=0, stream=True, conf=0.5)
         for result in results:
             column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
             df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
             df['name'] = df['class'].apply(lambda x: result.names[x])
-        df = df.drop(np.where(df['confidence'] < 0.5)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -81,12 +84,11 @@ class STK:
         else:
             image = put
 
-        results = self.model_detect_STK(image, imgsz=1280, device=self.device, classes=0)
+        results = self.model_detect_STK(image, imgsz=1280, device=self.device, classes=0, stream=True, conf=0.5)
         for result in results:
             column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
             df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
             df['name'] = df['class'].apply(lambda x: result.names[x])
-        df = df.drop(np.where(df['confidence'] < 0.5)[0])
         if video == 1:
             df['time_cadr'] = cad
         return df
@@ -168,11 +170,7 @@ def previu_video(kadr, fil, probability, clas_box):
 
 
 def sav(kadr, name, fil, put, ramka, probability,save_frame,clas_box = 0):
-    sistem = platform.system()
-    if 'Win' in sistem:
-        sleh = '\\'
-    else:
-        sleh = '/'
+    sleh = slesh()
 
     if not os.path.exists(put):
         os.makedirs(put)

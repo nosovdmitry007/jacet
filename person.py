@@ -12,9 +12,9 @@ class People:
     def __init__(self):
         device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                                    path='./model/person.pt',
-                                                    source='local',
-                                                    device=device)
+                                                  path='model/person.pt',
+                                                  source='local',
+                                                  device=device)
 
         self.model_class = cv2.dnn.readNetFromONNX('./model/classificator.onnx')
 
@@ -53,9 +53,9 @@ class Truck:
     def __init__(self):
         device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                                    path='./model/truck.pt',
-                                                    source='local',
-                                                    device=device)
+                                                  path='model/truck.pt',
+                                                  source='local',
+                                                  device=device)
 
     def truck_filter(self, put, cad='1', video=0):
         if video == 0:
@@ -73,9 +73,9 @@ class STK:
     def __init__(self):
         device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_people = torch.hub.load('./yolov5_master', 'custom',
-                                                    path='./model/stk.pt',
-                                                    source='local',
-                                                    device=device)
+                                                  path='model/stk.pt',
+                                                  source='local',
+                                                  device=device)
 
     def stk_filter(self, put, cad='1', video=0):
         if video == 0:
@@ -95,7 +95,7 @@ class Chasha:
     def __init__(self):
         device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         self.model_detect_chasha = torch.hub.load('./yolov5_master', 'custom',
-                                                  path='./model/chasha.pt',
+                                                  path='model/chasha.pt',
                                                   source='local',
                                                   device=device)
 
