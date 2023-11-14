@@ -9,7 +9,6 @@
 2. Устанавливаем необхоимые библиотеки:
 ```
     pip install --upgrade pip
-    cd jacket
     pip install -r requirements.txt
 ```
 3. Необходимо загрузить [веса](https://disk.yandex.ru/d/Ch_yYr4kvGhgEg) моделей в папку `yolo5`
