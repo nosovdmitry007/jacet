@@ -4,7 +4,7 @@
 
 1. Клонируем репозиторий GIT:
 ```
-    https://github.com/nosovdmitry007/jacet.git
+    https://github.com/nosovdmitry007/jacet/tree/ADD_packet
 ```
 2. Устанавливаем необхоимые библиотеки:
 ```
