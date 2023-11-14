@@ -1,145 +1,75 @@
 import cv2
-import cv2_ext
 import pybboxes as pbx
 import numpy as np
-import torch
 import pandas as pd
 import os
-import platform
 from ultralytics import YOLO
-from dop_fun import slesh
+from dop_fun import slesh, time_of_function
+
+@time_of_function
+def pandas_frame(nam_cad:list[str], results, classificator:int, cad_list:list, obj_detect:str):
+    model_class = cv2.dnn.readNetFromONNX('./model/classificator.onnx')
+    df_c:pandas_frame = pd.DataFrame()
+    z:int = 0
+    CLASSES = ['Hat', 'Jacket', 'JacketAndHat', 'None']
+    for res in results:
+        result = res[0]
+        z += 1
+        column:list[str] = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
+        df:pandas_frame = pd.DataFrame(result.boxes.data.tolist(), columns=column)
+        df['name'] = obj_detect
+        nom:int = int(((result.path).split('.')[0]).split('e')[1])
+        df['time_cadr'] = nam_cad[nom]
+        if classificator == 1:
+            clas:list = []
+            im:list = cad_list[z-1]
+            for k in df.values.tolist():
+                kad:list = im[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
+                blob:list = cv2.dnn.blobFromImage(cv2.resize(kad, (96, 96)), scalefactor=1.0 / 96
+                                             , size=(96, 96), mean=(128, 128, 128), swapRB=True)
+                model_class.setInput(blob)
+                detections:list = model_class.forward()
+                # преобразуем оценки в вероятности softmax
+                detections:list = np.exp(detections) / np.sum(np.exp(detections))
+                class_mark:int = np.argmax(detections)
+                clas.append(CLASSES[class_mark])
+            df['class_people'] = clas
+        df_c = pd.concat([df_c, df])
+    return df_c
 
 
-#Детектор и классификатор людей
-class People:
-    def __init__(self):
-        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        self.model_detect_people = YOLO("./model/person_v8.pt")#./model/model_scripted.pt")
-        self.model_class = cv2.dnn.readNetFromONNX('./model/classificator.onnx')
-
-    def person_filter(self, put, cad='1', video=0, classificator=0):
-        if video == 0:
-            image = cv2_ext.imread(put)
-        else:
-            image = put
-        # YOLOv8
-        #_________________________________________________________________________________________
-        results = self.model_detect_people(image, imgsz=1280, device=self.device, classes=0, stream=True, conf=0.3)
-        df_c = pd.DataFrame()
-        z = -1
-        for cad1, result in zip(cad,results):
-            z += 1
-            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
-            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
-            df['name'] = df['class'].apply(lambda x: result.names[x])
-            df['time_cadr'] = cad1
-
-            if classificator == 1:
-                CLASSES = ['Hat', 'Jacket', 'JacketAndHat', 'None']
-                clas = []
-                im = image[z]
-
-                for k in df.values.tolist():
-                    kad = im[int(k[1]):int(k[3]), int(k[0]):int(k[2])]
-                    blob = cv2.dnn.blobFromImage(cv2.resize(kad, (96, 96)), scalefactor=1.0 / 96
-                                                 , size=(96, 96), mean=(128, 128, 128), swapRB=True)
-                    self.model_class.setInput(blob)
-                    detections = self.model_class.forward()
-                    #преобразуем оценки в вероятности softmax
-                    detections = np.exp(detections) / np.sum(np.exp(detections))
-                    class_mark = np.argmax(detections)
-                    clas.append(CLASSES[class_mark])
-                df['class_people'] = clas
-            df_c = pd.concat([df_c, df])
-        # print(df_c)
-        return df_c
+@time_of_function
+def person_filter(nam_cad, cad_list, classificator=0, device=1):
+    # device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+    model_detect_people = YOLO("./model/person_v8.pt")  # ./model/model_scripted.pt")
+    results = model_detect_people(cad_list, imgsz=1280, device=device, classes=0, conf=0.5, stream=True)
+    return pandas_frame(nam_cad, results, classificator, cad_list, 'person')
 
 
-class Truck:
-    def __init__(self):
-        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        self.model_detect_TRUCK = YOLO("./model/truck_v8.pt")
-    def truck_filter(self, put, cad='1', video=0):
-        if video == 0:
-            image = cv2_ext.imread(put)
-        else:
-            image = put
-        results = self.model_detect_TRUCK(image, imgsz=1280, device=self.device, classes=0, stream=True, conf=0.5)
-        for result in results:
-            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
-            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
-            df['name'] = df['class'].apply(lambda x: result.names[x])
-        if video == 1:
-            df['time_cadr'] = cad
-        return df
-
-class STK:
-    def __init__(self):
-        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        self.model_detect_STK = YOLO("./model/stk_v8.pt")
-
-    def stk_filter(self, put, cad='1', video=0):
-        if video == 0:
-            image = cv2_ext.imread(put)
-        else:
-            image = put
-
-        results = self.model_detect_STK(image, imgsz=1280, device=self.device, classes=0, stream=True, conf=0.5)
-        for result in results:
-            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
-            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
-            df['name'] = df['class'].apply(lambda x: result.names[x])
-        if video == 1:
-            df['time_cadr'] = cad
-        return df
+@time_of_function
+def casha_filter(nam_cad, cad_list, classificator=0, device=1):
+    # device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+    model_detect_people = YOLO("./model/chasha_v8.pt")  # ./model/model_scripted.pt")
+    results = model_detect_people(cad_list, imgsz=1280, device=device, classes=0, conf=0.5)
+    return pandas_frame(nam_cad, results, classificator, cad_list, 'casha')
 
 
-class Chasha:
-    def __init__(self):
-        self.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        self.model_detect_CASHA = YOLO("./model/chasha_v8.pt")
-    def chasha_filter(self, put, cad='1', video=0):
-
-        if video == 0:
-            image = cv2_ext.imread(put)
-        else:
-            image = put
-        results = self.model_detect_CASHA(image, imgsz=1280, device=self.device, classes=0)
-        for result in results:
-            column = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
-            df = pd.DataFrame(result.boxes.data.tolist(), columns=column)
-            df['name'] = df['class'].apply(lambda x: result.names[x])
-        df = df.drop(np.where(df['confidence'] < 0.5)[0])
-        if video == 1:
-            df['time_cadr'] = cad
-        return df
+@time_of_function
+def truck_filter(nam_cad, cad_list, classificator=0, device=1):
+    model_detect_people = YOLO("./model/truck_v8.pt")  # ./model/model_scripted.pt")
+    results = model_detect_people(cad_list, imgsz=1280, device=device, classes=0, conf=0.5)
+    return pandas_frame(nam_cad, results, classificator, cad_list, 'truck')
 
 
-class Kadr:
-    def format_timedelta(self,td):
-        """Служебная функция для классного форматирования объектов timedelta (например, 00:00:20.05)
-        исключая микросекунды и сохраняя миллисекунды"""
-        result = str(td)
-        try:
-            result, ms = result.split(".")
-        except ValueError:
-            return result + ".00".replace(":", "-")
-        ms = int(ms)
-        ms = round(ms / 1e4)
-        return f"{result}.{ms:02}".replace(":", "-")
-
-    def get_saving_frames_durations(self,cap, saving_fps):
-        """Функция, которая возвращает список длительностей, в которые следует сохранять кадры."""
-        s = []
-        # получаем продолжительность клипа, разделив количество кадров на количество кадров в секунду
-        clip_duration = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
-        # используйте np.arange () для выполнения шагов с плавающей запятой
-        for i in np.arange(0, clip_duration, 1 / saving_fps):
-            s.append(i)
-        return s
+@time_of_function
+def stk_filter(nam_cad, cad_list, classificator=0, device=1):
+    model_detect_people = YOLO("./model/stk_v8.pt.pt")  # ./model/model_scripted.pt")
+    results = model_detect_people(cad_list, imgsz=1280, device=device, classes=0, conf=0.5)
+    return pandas_frame(nam_cad, results, classificator, cad_list, 'STK')
 
 
 def previu_video(kadr, fil, probability, clas_box):
+
     #проходим по каждой строке из датасета с найденными объектами на кадре
     for k in fil.values.tolist():
         if k[6] != 'person' or clas_box == 0:
