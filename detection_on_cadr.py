@@ -50,9 +50,9 @@ def detection_on_cadr(video_file):
         count += 1
     return cad, fps
 
-def detection(video_file, al, cat, probability, clas=0, clas_box=0, n=1):
+def detection(video_file, al, cat, probability, classificator=0, clas_box=0, n=1):
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-    if clas == 0:
+    if classificator == 0:
         clas_box = 0
     cad, fps = detection_on_cadr(video_file)
 
@@ -69,7 +69,7 @@ def detection(video_file, al, cat, probability, clas=0, clas_box=0, n=1):
         print(frame_duration_formatted)
         if al == 0:
             if cat == 'person':
-                strok = person_filter(frame_duration_formatted, frame, clas, device)
+                strok = person_filter(frame_duration_formatted, frame, classificator, device)
             if cat == 'chasha':
                 strok = casha_filter(frame_duration_formatted, frame, device)
             if cat == 'truck':
@@ -77,7 +77,7 @@ def detection(video_file, al, cat, probability, clas=0, clas_box=0, n=1):
             if cat == 'stk':
                 strok = stk_filter(frame_duration_formatted, frame, device)
         if al == 1:
-            strok_p = person_filter(frame_duration_formatted, frame, clas, device)
+            strok_p = person_filter(frame_duration_formatted, frame, classificator, device)
             strok_c = casha_filter(frame_duration_formatted, frame, device)
             strok_t = truck_filter(frame_duration_formatted, frame, device)
             strok_s = stk_filter(frame_duration_formatted, frame, device)
