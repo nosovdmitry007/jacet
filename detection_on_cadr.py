@@ -1,20 +1,11 @@
 from datetime import timedelta
 import cv2
 import pandas as pd
-# from person import People,  sav,  Chasha, Truck, STK, previu_video
-# from person_yolov8 import People,  sav,  Chasha, Truck, STK, previu_video
 import numpy as np
-import imutils
 import torch
 from dop_fun import resize_img, time_of_function
 import time
-
-from person_yolov8_fun import person_filter, stk_filter, casha_filter, truck_filter ,previu_video
-from numba import njit
-# people = People()
-# chasha = Chasha()
-# truck = Truck()
-# stk = STK()
+from person_yolov8 import person_filter, stk_filter, casha_filter, truck_filter ,previu_video
 
 
 def format_timedelta( td):
@@ -107,10 +98,5 @@ def detection(video_file, al, cat, probability, clas=0, clas_box=0, n=1):
     out.release()
     return df
 
-start = time.time()
-print(detection('./test/test.mp4', 0, 'person', 1, 0, 1, 5))
-end = time.time()
-print("The time of execution of above program is :",
-      (end - start), "sec")
 
-# print((detection_on_cadr('./test/test.mp4','fps',1)))
+print(detection('./test/test.mp4', 0, 'person', 1, 0, 1, 5))
